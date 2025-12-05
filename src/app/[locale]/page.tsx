@@ -3,9 +3,11 @@ import { setRequestLocale } from 'next-intl/server';
 
 import {
   getIndexPageText,
-  getQuestionText
+  getQuestionText,
+  getFeaturesText,
+  getToolsListText,
+  getPricingText
 } from "~/i18n/languageText";
-import { getLatestPublicResultList } from "~/servers/works";
 
 export const revalidate = 120;
 export default async function IndexPage({ params: { locale = '' }, searchParams: searchParams }) {
@@ -14,15 +16,18 @@ export default async function IndexPage({ params: { locale = '' }, searchParams:
 
   const indexText = await getIndexPageText();
   const questionText = await getQuestionText();
-
-  const resultInfoListInit = await getLatestPublicResultList(locale, 1);
+  const featuresText = await getFeaturesText();
+  const toolsListText = await getToolsListText();
+  const pricingText = await getPricingText();
 
   return (
     <PageComponent
       locale={locale}
       indexText={indexText}
       questionText={questionText}
-      resultInfoListInit={resultInfoListInit}
+      featuresText={featuresText}
+      toolsListText={toolsListText}
+      pricingText={pricingText}
       searchParams={searchParams}
     />
   )

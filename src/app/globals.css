@@ -2,62 +2,130 @@
 @tailwind components;
 @tailwind utilities;
 
-/* styles.css */
-.div-markdown-color h1,
-.div-markdown-color h2,
-.div-markdown-color h3,
-.div-markdown-color h4,
-.div-markdown-color h5,
-.div-markdown-color h6 {
-    @apply text-gray-50;
+/* WaveKit Global Styles */
+@layer base {
+  :root {
+    --brand-primary: 20 184 166;
+    --brand-secondary: 249 115 22;
+    --neutral-bg: 255 255 255;
+  }
+
+  body {
+    @apply bg-white text-neutral-900 antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold;
+  }
 }
 
-.div-markdown-color a {
-    @apply text-gray-200;
-}
+@layer components {
+  /* Markdown Styles */
+  .div-markdown-color h1,
+  .div-markdown-color h2,
+  .div-markdown-color h3,
+  .div-markdown-color h4,
+  .div-markdown-color h5,
+  .div-markdown-color h6 {
+    @apply text-neutral-900 font-semibold;
+  }
 
-.div-markdown-color strong {
-    @apply text-gray-50;
-}
+  .div-markdown-color a {
+    @apply text-brand-600 hover:text-brand-700 transition-colors;
+  }
 
-.custom-textarea:focus {
+  .div-markdown-color strong {
+    @apply text-neutral-900 font-semibold;
+  }
+
+  .div-markdown-color p {
+    @apply text-neutral-700 leading-relaxed;
+  }
+
+  /* Custom Input Styles */
+  .custom-textarea:focus {
     border: none !important;
     outline: none !important;
+  }
+
+  /* Background Styles - Modern Light Theme */
+  .background-div {
+    @apply bg-gradient-to-br from-brand-50 via-white to-accent-50;
+  }
+
+  .background-header {
+    @apply bg-white/80 backdrop-blur-md border-b border-neutral-200;
+  }
+
+  .background-footer {
+    @apply bg-neutral-50 border-t border-neutral-200;
+  }
+
+  /* Button Styles */
+  .btn-primary {
+    @apply bg-brand-500 hover:bg-brand-600 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 shadow-brand hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply bg-accent-500 hover:bg-accent-600 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 shadow-accent hover:shadow-lg;
+  }
+
+  .btn-outline {
+    @apply border-2 border-brand-500 text-brand-600 hover:bg-brand-50 font-semibold px-6 py-3 rounded-xl transition-all duration-200;
+  }
+
+  /* Card Styles */
+  .card {
+    @apply bg-white rounded-2xl shadow-soft hover:shadow-medium transition-shadow duration-200 border border-neutral-100;
+  }
+
+  .card-hover {
+    @apply card hover:scale-[1.02] transition-transform duration-200;
+  }
+
+  /* Gradient Text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent;
+  }
+
+  .gradient-text-accent {
+    @apply bg-gradient-to-r from-accent-600 to-accent-400 bg-clip-text text-transparent;
+  }
 }
 
-
-.background-div {
-    background-image: linear-gradient(to left top, #14171f, #151829, #181831, #201739, #2b133e);
-    background-repeat: no-repeat;
-    background-size: cover;
-}
-
-.background-header {
-    background-image: linear-gradient(to left top, #14171f, #151829, #181831, #201739, #2b133e);
-    background-repeat: no-repeat;
-    background-size: cover;
-}
-
-.background-footer {
-    background-image: linear-gradient(to left top, #14171f, #151829, #181831, #201739, #2b133e);
-    background-repeat: no-repeat;
-    background-size: cover;
-}
-
-.line-clamp-2 {
+@layer utilities {
+  .line-clamp-2 {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
-}
+  }
 
-/* 定义一个棋盘格背景的样式 */
-.checkerboard {
-    /* 创建两个线性渐变，45度角，模拟棋盘格效果 */
-    background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0),
-    linear-gradient(45deg, #f0f0f0 25%, #ffffff 25%, #ffffff 75%, #f0f0f0 75%, #f0f0f0);
-    /* 定义每个方格的大小为20px */
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+
+  /* Audio Waveform Background Pattern */
+  .waveform-bg {
+    background-image:
+      repeating-linear-gradient(
+        90deg,
+        rgba(20, 184, 166, 0.03) 0px,
+        rgba(20, 184, 166, 0.03) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+  }
+
+  /* Checkerboard Pattern (for transparency preview) */
+  .checkerboard {
+    background-image:
+      linear-gradient(45deg, #f5f5f5 25%, transparent 25%, transparent 75%, #f5f5f5 75%, #f5f5f5),
+      linear-gradient(45deg, #f5f5f5 25%, #ffffff 25%, #ffffff 75%, #f5f5f5 75%, #f5f5f5);
     background-size: 20px 20px;
-    /* 偏移其中一个渐变，以产生交错效果 */
     background-position: 0 0, 10px 10px;
+  }
 }

@@ -7,6 +7,99 @@ export const getIndexPageText = async () => {
     description: tIndex('description'),
     h1Text: tIndex('h1Text'),
     descriptionBelowH1Text: tIndex('descriptionBelowH1Text'),
+    ctaPrimary: tIndex('ctaPrimary'),
+    ctaSecondary: tIndex('ctaSecondary'),
+  }
+}
+
+export const getFeaturesText = async () => {
+  const tFeatures = await getTranslations('FeaturesText');
+  return {
+    feature1Title: tFeatures('feature1Title'),
+    feature1Desc: tFeatures('feature1Desc'),
+    feature2Title: tFeatures('feature2Title'),
+    feature2Desc: tFeatures('feature2Desc'),
+    feature3Title: tFeatures('feature3Title'),
+    feature3Desc: tFeatures('feature3Desc'),
+    feature4Title: tFeatures('feature4Title'),
+    feature4Desc: tFeatures('feature4Desc'),
+    feature5Title: tFeatures('feature5Title'),
+    feature5Desc: tFeatures('feature5Desc'),
+    feature6Title: tFeatures('feature6Title'),
+    feature6Desc: tFeatures('feature6Desc'),
+  }
+}
+
+export const getToolsListText = async () => {
+  const tTools = await getTranslations('ToolsListText');
+  return {
+    vocalRemover: tTools('vocalRemover'),
+    vocalRemoverDesc: tTools('vocalRemoverDesc'),
+    karaokeMaker: tTools('karaokeMaker'),
+    karaokeMakerDesc: tTools('karaokeMakerDesc'),
+    extractVocals: tTools('extractVocals'),
+    extractVocalsDesc: tTools('extractVocalsDesc'),
+    acapellaMaker: tTools('acapellaMaker'),
+    acapellaMakerDesc: tTools('acapellaMakerDesc'),
+    noiseReducer: tTools('noiseReducer'),
+    noiseReducerDesc: tTools('noiseReducerDesc'),
+  }
+}
+
+export const getToolsPageText = async () => {
+  const tTools = await getTranslations('ToolsText');
+  return {
+    title: tTools('title') + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME,
+    description: tTools('description'),
+    h1Text: tTools('h1Text'),
+    descriptionBelowH1Text: tTools('descriptionBelowH1Text'),
+  }
+}
+
+export const getToolPageText = async (toolSlug: string) => {
+  // Convert tool-slug to ToolSlug format for translation key
+  const toolKey = toolSlug.split('-').map((word, index) =>
+    index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+  ).join('');
+
+  const tTool = await getTranslations(`Tool.${toolKey}` as any);
+
+  return {
+    title: tTool('title') + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME,
+    description: tTool('description'),
+    h1Text: tTool('h1Text'),
+    descriptionBelowH1Text: tTool('descriptionBelowH1Text'),
+    uploadTitle: tTool('uploadTitle'),
+    uploadDesc: tTool('uploadDesc'),
+    processButton: tTool('processButton'),
+    howToUseTitle: tTool('howToUseTitle'),
+    step1Title: tTool('step1Title'),
+    step1Desc: tTool('step1Desc'),
+    step2Title: tTool('step2Title'),
+    step2Desc: tTool('step2Desc'),
+    step3Title: tTool('step3Title'),
+    step3Desc: tTool('step3Desc'),
+    featuresTitle: tTool('featuresTitle'),
+    feature1Title: tTool('feature1Title'),
+    feature1Desc: tTool('feature1Desc'),
+    feature2Title: tTool('feature2Title'),
+    feature2Desc: tTool('feature2Desc'),
+    feature3Title: tTool('feature3Title'),
+    feature3Desc: tTool('feature3Desc'),
+    feature4Title: tTool('feature4Title'),
+    feature4Desc: tTool('feature4Desc'),
+    faqTitle: tTool('faqTitle'),
+    faq1Q: tTool('faq1Q'),
+    faq1A: tTool('faq1A'),
+    faq2Q: tTool('faq2Q'),
+    faq2A: tTool('faq2A'),
+    faq3Q: tTool('faq3Q'),
+    faq3A: tTool('faq3A'),
+    faq4Q: tTool('faq4Q'),
+    faq4A: tTool('faq4A'),
+    faq5Q: tTool('faq5Q'),
+    faq5A: tTool('faq5A'),
+    seoContent: tTool('seoContent'),
   }
 }
 
@@ -52,59 +145,59 @@ export const getPricingText = async () => {
   const title = tPricing('title') + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME;
   const description = tPricing('description');
   const h1Text =  tPricing('h1Text');
-  const basic =  tPricing('basic');
-  const essential =  tPricing('essential');
-  const growth =  tPricing('growth');
+  const subtitle = tPricing('subtitle');
   const buyText=  tPricing('buyText');
   const popularText = tPricing('popularText');
-  const creditsText = tPricing('creditsText');
-  const creditText = tPricing('creditText');
+  const currentPlanText = tPricing('currentPlanText');
   const free = tPricing('free');
-  const free0 = tPricing('free0');
-  const freeText = tPricing('freeText');
+  const proMonthly = tPricing('proMonthly');
+  const proYearly = tPricing('proYearly');
   let freeIntro0 = tPricing('freeIntro0');
   const freeIntro1 = tPricing('freeIntro1');
   const freeIntro2 = tPricing('freeIntro2');
-  const subscriptionIntro0 = tPricing('subscriptionIntro0');
-  const subscriptionIntro1 = tPricing('subscriptionIntro1');
-  const subscriptionIntro2 = tPricing('subscriptionIntro2');
-  const subscriptionIntro3 = tPricing('subscriptionIntro3');
-  const subscriptionIntro4 = tPricing('subscriptionIntro4');
-  const monthText = tPricing('monthText');
+  const freeIntro3 = tPricing('freeIntro3');
+  const freeIntro4 = tPricing('freeIntro4');
+  const proIntro0 = tPricing('proIntro0');
+  const proIntro1 = tPricing('proIntro1');
+  const proIntro2 = tPricing('proIntro2');
+  const proIntro3 = tPricing('proIntro3');
+  const proIntro4 = tPricing('proIntro4');
+  const proIntro5 = tPricing('proIntro5');
+  const proIntro6 = tPricing('proIntro6');
+  const proIntro7 = tPricing('proIntro7');
   const monthlyText = tPricing('monthlyText');
-  const annualText = tPricing('annualText');
   const annuallyText = tPricing('annuallyText');
   const annuallySaveText = tPricing('annuallySaveText');
 
   // 免费生成次数
-  const freeTimes = process.env.FREE_TIMES;
+  const freeTimes = process.env.FREE_TIMES || '3';
   freeIntro0 = freeIntro0.replace(/%freeTimes%/g, freeTimes);
 
   return {
     title: title,
     description: description,
     h1Text: h1Text,
-    basic: basic,
-    essential: essential,
-    growth: growth,
+    subtitle: subtitle,
     buyText: buyText,
     popularText: popularText,
-    creditsText: creditsText,
-    creditText: creditText,
+    currentPlanText: currentPlanText,
     free: free,
-    free0: free0,
-    freeText: freeText,
+    proMonthly: proMonthly,
+    proYearly: proYearly,
     freeIntro0: freeIntro0,
     freeIntro1: freeIntro1,
     freeIntro2: freeIntro2,
-    subscriptionIntro0: subscriptionIntro0,
-    subscriptionIntro1: subscriptionIntro1,
-    subscriptionIntro2: subscriptionIntro2,
-    subscriptionIntro3: subscriptionIntro3,
-    subscriptionIntro4: subscriptionIntro4,
-    monthText: monthText,
+    freeIntro3: freeIntro3,
+    freeIntro4: freeIntro4,
+    proIntro0: proIntro0,
+    proIntro1: proIntro1,
+    proIntro2: proIntro2,
+    proIntro3: proIntro3,
+    proIntro4: proIntro4,
+    proIntro5: proIntro5,
+    proIntro6: proIntro6,
+    proIntro7: proIntro7,
     monthlyText: monthlyText,
-    annualText: annualText,
     annuallyText: annuallyText,
     annuallySaveText: annuallySaveText,
   }
@@ -143,61 +236,26 @@ export const getWorksText = async () => {
   }
 }
 
-export const getExploreText = async (countSticker: string, page) => {
-  const tExplore = await getTranslations('ExploreText');
-  let title = tExplore('title');
-  let description = tExplore('description');
-  let h1Text = tExplore('h1Text');
-  let descriptionBelowH1Text = tExplore('descriptionBelowH1Text');
-  let pageText = tExplore('pageText');
-  let h2Text = tExplore('h2Text');
-
-  title = title.replace(/%countSticker%/g, countSticker);
-  description = description.replace(/%countSticker%/g, countSticker);
-  pageText = pageText.replace(/%pageNumber%/g, page);
-
-  if (page != '1') {
-    title = title + ", " + pageText + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME;
-  } else {
-    title = title + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME;
-  }
-  h2Text = h2Text.replace(/%countSticker%/g, countSticker);
-
+// Legacy functions for old sticker pages - kept for backward compatibility
+export const getExploreText = async (countSticker: string, page: any) => {
+  // Placeholder return for legacy pages
   return {
-    title: title,
-    description: description,
-    h1Text: h1Text,
-    descriptionBelowH1Text: descriptionBelowH1Text,
-    h2Text: h2Text
+    title: 'Explore | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME,
+    description: 'Explore audio tools',
+    h1Text: 'Explore Audio Tools',
+    descriptionBelowH1Text: 'Discover our audio processing tools',
+    h2Text: 'Audio Tools'
   }
 }
 
-export const getDetailText = async (workDetail) => {
-  let promptResult = workDetail.input_text.slice(0, 20);
-  const tDetail = await getTranslations('DetailText');
-  let title = tDetail('title');
-  let description = tDetail('description');
-  let h1Text = tDetail('h1Text');
-  let descriptionBelowH1Text = tDetail('descriptionBelowH1Text');
-  let numberText = tDetail('numberText');
-  let h2Text = tDetail('h2Text');
-
-  title = title.replace(/%prompt%/g, promptResult);
-  description = description.replace(/%prompt%/g, promptResult);
-  h1Text = h1Text.replace(/%prompt%/g, promptResult);
-  descriptionBelowH1Text = descriptionBelowH1Text.replace(/%prompt%/g, promptResult);
-
-  numberText = numberText.replace(/%detailId%/g, workDetail.id);
-  title = title + ', ' + numberText + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME;
-
-  h2Text = h2Text.replace(/%prompt%/g, promptResult);
-
+export const getDetailText = async (workDetail: any) => {
+  // Placeholder return for legacy pages
   return {
-    title: title,
-    description: description,
-    h1Text: h1Text,
-    descriptionBelowH1Text: descriptionBelowH1Text,
-    h2Text: h2Text
+    title: 'Detail | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME,
+    description: 'Audio detail',
+    h1Text: 'Audio Detail',
+    descriptionBelowH1Text: 'Audio processing detail',
+    h2Text: 'Detail'
   }
 }
 
@@ -211,44 +269,34 @@ export const getQuestionText = async () => {
 export const getMenuText = async () => {
   const tMenu = await getTranslations('MenuText');
   return {
-    header0: tMenu('header0'),
-    header1: tMenu('header1'),
-    header2: tMenu('header2'),
-    header3: tMenu('header3'),
+    // New menu structure
+    header0: tMenu('home'),
+    header1: tMenu('myAudio'),
+    header4: tMenu('tools'),
+    header5: tMenu('blog'),
+    header6: tMenu('pricing'),
+    // Footer sections
     footerLegal: tMenu('footerLegal'),
     footerLegal0: tMenu('footerLegal0'),
     footerLegal1: tMenu('footerLegal1'),
     footerSupport: tMenu('footerSupport'),
     footerSupport0: tMenu('footerSupport0'),
     footerSupport1: tMenu('footerSupport1'),
+    footerTools: tMenu('footerTools'),
+    footerCompany: tMenu('footerCompany'),
+    footerCompany0: tMenu('footerCompany0'),
+    footerCompany1: tMenu('footerCompany1'),
+    footerCompany2: tMenu('footerCompany2'),
   }
 }
 
-export const getSearchText = async (countSticker, sticker: string, countStickerAll) => {
+// Legacy function for old search page - kept for backward compatibility
+export const getSearchText = async (countSticker: any, sticker: string, countStickerAll: any) => {
   const tSearch = await getTranslations('SearchText');
-  let title = tSearch('title');
-  let description = tSearch('description');
-  let h1Text = tSearch('h1Text');
-  let h2Text = tSearch('h2Text');
-  let titleSearch = tSearch('titleSearch');
-  let h2TextSearch = tSearch('h2TextSearch');
-
-  title = title.replace(/%countSticker%/g, countSticker);
-  description = description.replace(/%countStickerAll%/g, countStickerAll);
-  h2Text = h2Text.replace(/%countSticker%/g, countSticker);
-
-  title = title + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME;
-
-  if (sticker) {
-    titleSearch = titleSearch.replace(/%countSticker%/g, countSticker);
-    let promptResult = sticker.slice(0, 20);
-    titleSearch = titleSearch.replace(/%prompt%/g, promptResult);
-    title = titleSearch + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME;
-
-    h2TextSearch = h2TextSearch.replace(/%countSticker%/g, countSticker);
-    h2TextSearch = h2TextSearch.replace(/%prompt%/g, promptResult);
-    h2Text = h2TextSearch;
-  }
+  const title = tSearch('title') + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME;
+  const description = tSearch('description');
+  const h1Text = tSearch('h1Text');
+  const h2Text = tSearch('h2Text');
 
   return {
     title: title,
@@ -256,5 +304,47 @@ export const getSearchText = async (countSticker, sticker: string, countStickerA
     h1Text: h1Text,
     h2Text: h2Text,
   }
+}
 
+// Blog page text
+export const getBlogText = async () => {
+  const tBlog = await getTranslations('BlogText');
+  return {
+    title: tBlog('title'),
+    description: tBlog('description'),
+    h1Text: tBlog('h1Text'),
+    descriptionBelowH1Text: tBlog('descriptionBelowH1Text'),
+  }
+}
+
+// Blog post text
+export const getBlogPostText = async (slug: string) => {
+  // Convert slug to camelCase for translation namespace
+  const camelCaseSlug = slug.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+  const tBlogPost = await getTranslations(`BlogPosts.${camelCaseSlug}` as any);
+
+  return {
+    title: tBlogPost('title'),
+    description: tBlogPost('description'),
+    h1Text: tBlogPost('h1Text'),
+    category: tBlogPost('category'),
+    date: tBlogPost('date'),
+    author: tBlogPost('author'),
+    readTime: tBlogPost('readTime'),
+    content: tBlogPost('content'),
+    relatedPosts: [
+      {
+        slug: tBlogPost('related1Slug'),
+        title: tBlogPost('related1Title'),
+        excerpt: tBlogPost('related1Excerpt'),
+        category: tBlogPost('related1Category'),
+      },
+      {
+        slug: tBlogPost('related2Slug'),
+        title: tBlogPost('related2Title'),
+        excerpt: tBlogPost('related2Excerpt'),
+        category: tBlogPost('related2Category'),
+      }
+    ]
+  }
 }

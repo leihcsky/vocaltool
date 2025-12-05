@@ -1,8 +1,7 @@
 -- auto-generated definition
 create table stripe_customers
 (
-    user_id            varchar not null
-        primary key,
+    user_id            varchar not null primary key,
     stripe_customer_id text
 );
 

@@ -2,8 +2,7 @@ create type subscription_status as enum ('trialing', 'active', 'canceled', 'inco
 -- auto-generated definition
 create table stripe_subscriptions
 (
-    id                   text                                                          not null
-        primary key,
+    id                   text  not null primary key,
     user_id              varchar,
     status               subscription_status,
     metadata             jsonb,

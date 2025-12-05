@@ -1,8 +1,18 @@
-User-Agent: *
-Allow: *
-Disallow: /api
+# WaveKit - AI Audio Editing Tools
+# https://wavekit.org
+
+User-agent: *
+Allow: /
 Disallow: /api/
-Disallow: /api*
-Disallow: /*/api
 Disallow: /*/api/
-Disallow: /*/api*
+Disallow: /my
+Disallow: /*/my
+Disallow: /search
+Disallow: /*/search
+Disallow: /sticker/
+Disallow: /*/sticker/
+Disallow: /stickers
+Disallow: /*/stickers
+
+# Sitemap
+Sitemap: https://wavekit.org/sitemap.xml

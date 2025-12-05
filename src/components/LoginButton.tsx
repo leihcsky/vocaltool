@@ -54,16 +54,16 @@ const LoginButton = ({
             {
               loading ? (
                   <button
-                    className="inline-flex w-full justify-center gap-x-1.5 border border-[rgba(255,255,255,0.5)] rounded-md px-3 py-2 text-sm font-semibold hover:border-[rgba(255,255,255,0.9)]"
+                    className="inline-flex w-full items-center justify-center gap-x-2 rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
                     disabled
                   >
-                    <p>Login</p>
+                    <span>Login</span>
                     {whiteLoadingSvg}
                   </button>
                 ) :
                 (
                   <button
-                    className="inline-flex w-full justify-center gap-x-1.5 border border-[rgba(255,255,255,0.5)] rounded-md px-3 py-2 text-sm font-semibold hover:border-[rgba(255,255,255,0.9)]"
+                    className="inline-flex w-full items-center justify-center gap-x-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 transition-colors shadow-sm"
                     onClick={login}
                   >
                     {loginText}
@@ -78,10 +78,11 @@ const LoginButton = ({
           <>
             {
               <button
-                className="my-auto mx-auto mr-4 mt-1 inline-flex w-full justify-center gap-x-1.5 rounded-md text-sm font-semibold"
+                className="inline-flex items-center justify-center rounded-full ring-2 ring-brand-500 hover:ring-brand-600 transition-all"
                 onClick={logout}
+                title={userData.email}
               >
-                <img className="h-8 w-auto rounded-full" src={userData.image} alt=""/>
+                <img className="h-8 w-8 rounded-full" src={userData.image} alt={userData.name || userData.email}/>
               </button>
             }
           </>

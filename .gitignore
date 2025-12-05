@@ -37,6 +37,7 @@ next-env.d.ts
 
 .idea
 .vscode
+.md
 yarn.lock
 pnpm-lock.yaml
 package-lock.json

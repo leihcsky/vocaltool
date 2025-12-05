@@ -4,7 +4,6 @@ import Header from "~/components/Header";
 import Footer from "~/components/Footer";
 import Pricing from "~/components/PricingComponent";
 import {useEffect, useRef, useState} from "react";
-import TopBlurred from "~/components/TopBlurred";
 import {useCommonContext} from "~/context/common-context";
 
 
@@ -42,13 +41,13 @@ const PageComponent = ({
         page={pagePath}
         title={pricingText.title}
         description={pricingText.description}
+        keywords="audio editing pricing, AI audio tools subscription, vocal remover price, karaoke maker cost, audio processing plans, free audio tools, pro audio editing"
       />
       <Header
         locale={locale}
         page={pagePath}
       />
-      <div className={"mt-8 my-auto min-h-[90vh]"}>
-        <TopBlurred/>
+      <div className="min-h-screen bg-white">
         <Pricing
           redirectUrl={`${locale}/pricing`}
           isPricing={true}
