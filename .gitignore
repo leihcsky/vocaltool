@@ -37,7 +37,20 @@ next-env.d.ts
 
 .idea
 .vscode
-.md
 yarn.lock
 pnpm-lock.yaml
 package-lock.json
+
+# Project summary and documentation files (auto-generated)
+DESIGN_SYSTEM.md
+SEO_OPTIMIZATION_SUMMARY.md
+PROJECT_COMPLETION_SUMMARY.md
+QUICK_START_GUIDE.md
+BUGFIX_LOADING_STATE.md
+NAVIGATION_IMPROVEMENT_SUMMARY.md
+NAVIGATION_FIX_SUMMARY.md
+LOGO_IMPLEMENTATION_SUMMARY.md
+LOGO_FINAL_DESIGN.md
+public/OG_IMAGE_README.md
+public/LOGO_DESIGN_GUIDE.md
+public/GENERATE_PNG_ICONS.md

@@ -10,7 +10,8 @@ export const CommonProvider = ({
                                  commonText,
                                  authText,
                                  menuText,
-                                 pricingText
+                                 pricingText,
+                                 toolsListText
                                }) => {
 
   const {data: session, status} = useSession();
@@ -61,6 +62,7 @@ export const CommonProvider = ({
         authText,
         menuText,
         pricingText,
+        toolsListText,
       }}
     >
       {children}

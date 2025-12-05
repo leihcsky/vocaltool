@@ -2,6 +2,7 @@
 import HeadInfo from "~/components/HeadInfo";
 import Header from "~/components/Header";
 import Footer from "~/components/Footer";
+import ToolsSidebar from "~/components/ToolsSidebar";
 import { useState, useEffect, useRef } from "react";
 import { useCommonContext } from "~/context/common-context";
 import {
@@ -79,21 +80,29 @@ const PageComponent = ({
         keywords={getToolKeywords(toolSlug)}
       />
       <Header locale={locale} page={`tools/${toolSlug}`} />
-      
-      <main className="min-h-screen bg-gradient-to-b from-white to-neutral-50">
-        {/* Hero Section */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl sm:text-5xl font-bold text-neutral-900 mb-4">
-              {toolPageText.h1Text}
-            </h1>
-            <p className="text-xl text-neutral-600 max-w-3xl mx-auto">
-              {toolPageText.descriptionBelowH1Text}
-            </p>
-          </div>
 
-          {/* Upload Section */}
-          <div className="max-w-4xl mx-auto">
+      {/* Layout with Sidebar */}
+      <div className="flex">
+        {/* Sidebar - Hidden on mobile, visible on desktop */}
+        <div className="hidden lg:block">
+          <ToolsSidebar locale={locale} currentToolSlug={toolSlug} />
+        </div>
+
+        {/* Main Content */}
+        <main className="flex-1 min-h-screen bg-gradient-to-b from-white to-neutral-50">
+          {/* Hero Section */}
+          <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+            <div className="text-center mb-12">
+              <h1 className="text-4xl sm:text-5xl font-bold text-neutral-900 mb-4">
+                {toolPageText.h1Text}
+              </h1>
+              <p className="text-xl text-neutral-600 max-w-3xl mx-auto">
+                {toolPageText.descriptionBelowH1Text}
+              </p>
+            </div>
+
+            {/* Upload Section */}
+            <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-2xl shadow-lg border border-neutral-200 p-8 sm:p-12">
               {!uploadedFile ? (
                 <div className="text-center">
@@ -163,12 +172,12 @@ const PageComponent = ({
                   </button>
                 </div>
               )}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* How to Use Section */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          {/* How to Use Section */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold text-neutral-900 mb-8 text-center">
               {toolPageText.howToUseTitle || 'How to Use'}
@@ -207,12 +216,12 @@ const PageComponent = ({
                   {toolPageText.step3Desc || 'Get your processed audio file'}
                 </p>
               </div>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Features Section */}
-        <section className="bg-white py-16">
+          {/* Features Section */}
+          <section className="bg-white py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-neutral-900 mb-8 text-center">
@@ -266,21 +275,22 @@ const PageComponent = ({
                   </div>
                 );
               })}
-            </div>
-          </div>
-        </section>
-
-        {/* SEO Content Section */}
-        {toolPageText.seoContent && (
-          <section className="bg-neutral-50 py-16">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="prose prose-neutral max-w-none">
-                <Markdown>{toolPageText.seoContent}</Markdown>
               </div>
             </div>
           </section>
-        )}
-      </main>
+
+          {/* SEO Content Section */}
+          {toolPageText.seoContent && (
+            <section className="bg-neutral-50 py-16">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="prose prose-neutral max-w-none">
+                  <Markdown>{toolPageText.seoContent}</Markdown>
+                </div>
+              </div>
+            </section>
+          )}
+        </main>
+      </div>
 
       <Footer locale={locale} page="tools" />
     </>

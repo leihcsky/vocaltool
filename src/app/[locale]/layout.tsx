@@ -6,7 +6,7 @@ import { ReactNode } from 'react';
 import { locales } from '~/i18n/config';
 import { CommonProvider } from '~/context/common-context';
 import { NextAuthProvider } from '~/context/next-auth-context';
-import { getAuthText, getCommonText, getMenuText, getPricingText } from "~/i18n/languageText";
+import { getAuthText, getCommonText, getMenuText, getPricingText, getToolsListText } from "~/i18n/languageText";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -34,6 +34,7 @@ export default async function LocaleLayout({
   const authText = await getAuthText();
   const menuText = await getMenuText();
   const pricingText = await getPricingText();
+  const toolsListText = await getToolsListText();
 
   return (
     <html lang={locale}>
@@ -47,6 +48,7 @@ export default async function LocaleLayout({
             authText={authText}
             menuText={menuText}
             pricingText={pricingText}
+            toolsListText={toolsListText}
           >
             {children}
           </CommonProvider>

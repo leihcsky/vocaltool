@@ -26,8 +26,18 @@ export default function Header({
     userData,
     commonText,
     authText,
-    menuText
+    menuText,
+    toolsListText
   } = useCommonContext();
+
+  // Tools list for dropdown
+  const toolsList = [
+    { name: toolsListText.vocalRemover, slug: 'vocal-remover', emoji: '🎤' },
+    { name: toolsListText.karaokeMaker, slug: 'karaoke-maker', emoji: '🎵' },
+    { name: toolsListText.extractVocals, slug: 'extract-vocals', emoji: '🎙️' },
+    { name: toolsListText.acapellaMaker, slug: 'acapella-maker', emoji: '🎶' },
+    { name: toolsListText.noiseReducer, slug: 'noise-reducer', emoji: '🔇' },
+  ];
 
   const [pageResult] = useState(getLinkHref(locale, page))
 
@@ -66,18 +76,20 @@ export default function Header({
         <div className="flex items-center">
           <Link
             href={getLinkHref(locale, '')}
-            className="flex items-center gap-2"
+            className="flex items-center"
             onClick={() => checkLocalAndLoading(locale)}>
+            {/* Desktop: Full horizontal logo */}
             <img
-              className="h-8 w-auto"
-              src="/website.svg"
-              width={32}
-              height={32}
-              alt={process.env.NEXT_PUBLIC_DOMAIN_NAME}
+              className="h-12 w-auto hidden sm:block"
+              src="/logo-final.svg"
+              alt={process.env.NEXT_PUBLIC_BRAND_NAME}
             />
-            <span className="text-xl font-bold text-neutral-900 hidden sm:block">
-              {process.env.NEXT_PUBLIC_BRAND_NAME}
-            </span>
+            {/* Mobile: Icon only */}
+            <img
+              className="h-10 w-auto sm:hidden"
+              src="/logo-icon.svg"
+              alt={process.env.NEXT_PUBLIC_BRAND_NAME}
+            />
           </Link>
         </div>
 
@@ -105,16 +117,56 @@ export default function Header({
             }`}>
             {menuText.header0}
           </Link>
-          <Link
-            href={getLinkHref(locale, 'tools')}
-            onClick={() => checkPageAndLoading('tools')}
-            className={`text-sm font-semibold leading-6 transition-colors ${
-              page === 'tools' || page?.startsWith('tools/')
-                ? 'text-brand-600'
-                : 'text-neutral-700 hover:text-brand-600'
-            }`}>
-            {menuText.header4}
-          </Link>
+
+          {/* Tools Dropdown */}
+          <Menu as="div" className="relative inline-block text-left">
+            <div>
+              <Menu.Button
+                className={`inline-flex items-center gap-x-1 text-sm font-semibold leading-6 transition-colors ${
+                  page === 'tools' || page?.startsWith('tools/')
+                    ? 'text-brand-600'
+                    : 'text-neutral-700 hover:text-brand-600'
+                }`}>
+                {menuText.header4}
+                <ChevronDownIcon className="h-4 w-4" aria-hidden="true" />
+              </Menu.Button>
+            </div>
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="transform opacity-0 scale-95"
+              enterTo="transform opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="transform opacity-100 scale-100"
+              leaveTo="transform opacity-0 scale-95"
+            >
+              <Menu.Items
+                className="absolute left-0 z-30 mt-2 w-64 origin-top-left rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                <div className="py-1">
+                  {/* Individual Tools */}
+                  {toolsList.map((tool) => (
+                    <Menu.Item key={tool.slug}>
+                      {({ active }) => (
+                        <Link
+                          href={getLinkHref(locale, `tools/${tool.slug}`)}
+                          onClick={() => checkPageAndLoading(`tools/${tool.slug}`)}
+                          className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                            active
+                              ? 'bg-brand-50 text-brand-700'
+                              : 'text-neutral-700'
+                          }`}
+                        >
+                          <span className="text-lg">{tool.emoji}</span>
+                          <span className="font-medium">{tool.name}</span>
+                        </Link>
+                      )}
+                    </Menu.Item>
+                  ))}
+                </div>
+              </Menu.Items>
+            </Transition>
+          </Menu>
+
           <Link
             href={getLinkHref(locale, 'blog')}
             onClick={() => checkPageAndLoading('blog')}
@@ -224,18 +276,13 @@ export default function Header({
           <div className="flex items-center justify-between">
             <Link
               href={getLinkHref(locale, '')}
-              className="flex items-center gap-2"
+              className="flex items-center"
               onClick={() => checkLocalAndLoading(locale)}>
               <img
-                className="h-8 w-auto"
-                src="/website.svg"
-                width={32}
-                height={32}
-                alt={process.env.NEXT_PUBLIC_DOMAIN_NAME}
+                className="h-12 w-auto"
+                src="/logo-final.svg"
+                alt={process.env.NEXT_PUBLIC_BRAND_NAME}
               />
-              <span className="text-xl font-bold text-neutral-900">
-                {process.env.NEXT_PUBLIC_BRAND_NAME}
-              </span>
             </Link>
             <button
               type="button"
@@ -259,16 +306,39 @@ export default function Header({
                   }`}>
                   {menuText.header0}
                 </Link>
-                <Link
-                  href={getLinkHref(locale, 'tools')}
-                  onClick={() => checkPageAndLoading('tools')}
-                  className={`block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors ${
-                    page === 'tools' || page?.startsWith('tools/')
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-neutral-900 hover:bg-neutral-50'
-                  }`}>
-                  {menuText.header4}
-                </Link>
+
+                {/* Tools Section */}
+                <div>
+                  <Link
+                    href={getLinkHref(locale, 'tools')}
+                    onClick={() => checkPageAndLoading('tools')}
+                    className={`block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors ${
+                      page === 'tools' || page?.startsWith('tools/')
+                        ? 'bg-brand-50 text-brand-700'
+                        : 'text-neutral-900 hover:bg-neutral-50'
+                    }`}>
+                    {menuText.header4}
+                  </Link>
+                  {/* Tools submenu */}
+                  <div className="ml-4 mt-1 space-y-1">
+                    {toolsList.map((tool) => (
+                      <Link
+                        key={tool.slug}
+                        href={getLinkHref(locale, `tools/${tool.slug}`)}
+                        onClick={() => checkPageAndLoading(`tools/${tool.slug}`)}
+                        className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                          page === `tools/${tool.slug}`
+                            ? 'bg-brand-50 text-brand-700'
+                            : 'text-neutral-600 hover:bg-neutral-50 hover:text-brand-600'
+                        }`}
+                      >
+                        <span className="text-base">{tool.emoji}</span>
+                        <span>{tool.name}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
                 <Link
                   href={getLinkHref(locale, 'blog')}
                   onClick={() => checkPageAndLoading('blog')}

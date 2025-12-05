@@ -1,0 +1,29 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simplified waveform icon for favicon -->
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="url(#gradient-bg-favicon)"/>
+  
+  <!-- Simplified "W" waveform -->
+  <g id="favicon-wave">
+    <!-- Left wave bar -->
+    <rect x="6" y="10" width="3" height="12" rx="1.5" fill="white" opacity="0.9"/>
+    
+    <!-- Center-left wave bar (taller) -->
+    <rect x="11" y="6" width="3" height="20" rx="1.5" fill="white"/>
+    
+    <!-- Center-right wave bar (taller) -->
+    <rect x="18" y="6" width="3" height="20" rx="1.5" fill="white"/>
+    
+    <!-- Right wave bar -->
+    <rect x="23" y="10" width="3" height="12" rx="1.5" fill="white" opacity="0.9"/>
+  </g>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="gradient-bg-favicon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>
+
