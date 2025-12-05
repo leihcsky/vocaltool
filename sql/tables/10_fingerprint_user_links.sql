@@ -1,0 +1,11 @@
+CREATE TABLE fingerprint_user_links (
+    id BIGSERIAL PRIMARY KEY,                       -- 主键
+    fingerprint VARCHAR(255) NOT NULL,              -- 指纹
+    user_id varchar,   -- 注册用户 uid
+
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+
+    UNIQUE (fingerprint),                           -- 一个指纹只能关联一个用户
+    UNIQUE (user_id)                                -- 同一个用户只能对应一个指纹（通常）
+);
