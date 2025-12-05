@@ -8,6 +8,9 @@
 
 # testing
 /coverage
+/jest.config.js
+/jest.setup.js
+/src/_test_
 
 # next.js
 /.next/
@@ -51,6 +54,7 @@ NAVIGATION_IMPROVEMENT_SUMMARY.md
 NAVIGATION_FIX_SUMMARY.md
 LOGO_IMPLEMENTATION_SUMMARY.md
 LOGO_FINAL_DESIGN.md
+JEST_SETUP_GUIDE.md
 public/OG_IMAGE_README.md
 public/LOGO_DESIGN_GUIDE.md
 public/GENERATE_PNG_ICONS.md
