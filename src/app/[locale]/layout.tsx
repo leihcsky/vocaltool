@@ -7,6 +7,7 @@ import { locales } from '~/i18n/config';
 import { CommonProvider } from '~/context/common-context';
 import { NextAuthProvider } from '~/context/next-auth-context';
 import { getAuthText, getCommonText, getMenuText, getPricingText, getToolsListText } from "~/i18n/languageText";
+import FingerprintManager from '~/components/FingerprintManager';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -50,6 +51,7 @@ export default async function LocaleLayout({
             pricingText={pricingText}
             toolsListText={toolsListText}
           >
+            <FingerprintManager />
             {children}
           </CommonProvider>
         </NextAuthProvider>

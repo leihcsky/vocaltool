@@ -1,7 +1,14 @@
 import {v4 as uuidv4} from 'uuid';
 import {getDb} from "~/libs/db";
+import {linkFingerprintToUser} from "~/servers/fingerprint";
 
-export const checkAndSaveUser = async (name: string, email: string, image: string, last_login_ip: string) => {
+export const checkAndSaveUser = async (
+  name: string,
+  email: string,
+  image: string,
+  last_login_ip: string,
+  fingerprint?: string
+) => {
   const db = getDb();
   const results = await db.query(`select * from user_info where email=$1;`, [email]);
   const users = results.rows;
@@ -20,6 +27,17 @@ export const checkAndSaveUser = async (name: string, email: string, image: strin
     // 免费生成次数
     const freeTimes = Number(process.env.FREE_TIMES);
     await db.query('insert into user_available(user_id,stripe_customer_id,available_times) values($1, $2, $3)', [strUUID, '', freeTimes]);
+
+    // 关联浏览器指纹（如果提供）
+    if (fingerprint) {
+      try {
+        await linkFingerprintToUser(fingerprint, strUUID);
+        console.log(`Fingerprint ${fingerprint} linked to user ${strUUID}`);
+      } catch (error) {
+        console.error('Failed to link fingerprint during registration:', error);
+        // 不阻断注册流程，只记录错误
+      }
+    }
 
     result.user_id = strUUID;
     result.name = name;
