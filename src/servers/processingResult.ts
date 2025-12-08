@@ -8,27 +8,117 @@ import { R2, r2Bucket, storageURL } from "~/libs/R2";
 import { v4 as uuidv4 } from 'uuid';
 
 /**
- * 保存处理结果到 R2 和数据库
+ * 创建处理任务记录
  * @param uploadFileId 上传文件ID
- * @param resultType 结果类型（vocals, instrumental, etc.）
- * @param resultBuffer 结果文件 Buffer
- * @param mimeType MIME 类型
- * @param processingTimeMs 处理耗时（毫秒）
+ * @param taskId 任务ID
+ * @param taskStatus 任务状态
+ * @param taskMessage 任务消息
  * @returns 处理结果记录
  */
-export async function saveProcessingResult(
+export async function createProcessingTask(
+  uploadFileId: number,
+  taskId: string,
+  taskStatus: string,
+  taskMessage: string
+) {
+  const db = getDb();
+
+  try {
+    const result = await db.query(
+      `INSERT INTO processing_results
+       (upload_file_id, task_id, task_status, task_message)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [uploadFileId, taskId, taskStatus, taskMessage]
+    );
+
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error creating processing task:', error);
+    throw error;
+  }
+}
+
+/**
+ * 更新处理任务状态
+ * @param uploadFileId 上传文件ID
+ * @param taskStatus 任务状态
+ * @param taskMessage 任务消息
+ * @param processingTimeMs 处理耗时（毫秒，可选）
+ */
+export async function updateProcessingTask(
+  uploadFileId: number,
+  taskStatus: string,
+  taskMessage: string,
+  processingTimeMs?: number
+) {
+  const db = getDb();
+
+  try {
+    const result = await db.query(
+      `UPDATE processing_results
+       SET task_status = $1,
+           task_message = $2,
+           processing_time_ms = $3,
+           updated_at = NOW()
+       WHERE upload_file_id = $4
+       RETURNING *`,
+      [taskStatus, taskMessage, processingTimeMs || null, uploadFileId]
+    );
+
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error updating processing task:', error);
+    throw error;
+  }
+}
+
+/**
+ * 获取处理任务信息
+ * @param uploadFileId 上传文件ID
+ * @returns 处理任务记录
+ */
+export async function getProcessingTask(uploadFileId: number) {
+  const db = getDb();
+
+  try {
+    const result = await db.query(
+      `SELECT * FROM processing_results WHERE upload_file_id = $1`,
+      [uploadFileId]
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error getting processing task:', error);
+    throw error;
+  }
+}
+
+/**
+ * 保存处理结果详情到 R2 和数据库
+ * @param uploadFileId 上传文件ID
+ * @param resultType 结果类型（文件名）
+ * @param resultBuffer 结果文件 Buffer
+ * @param mimeType MIME 类型
+ * @returns 处理结果详情记录
+ */
+export async function saveProcessingResultDetail(
   uploadFileId: number,
   resultType: string,
   resultBuffer: Buffer,
-  mimeType: string,
-  processingTimeMs?: number
+  mimeType: string
 ) {
   const db = getDb();
 
   try {
     // 生成唯一的 R2 key
     const fileExtension = mimeType.includes('wav') ? 'wav' : 'mp3';
-    const r2Key = `results/${resultType}/${uuidv4()}.${fileExtension}`;
+    // const r2Key = `results/${resultType}/${uuidv4()}.${fileExtension}`;
+    const r2Key = `results/${uploadFileId}/${resultType}`;
 
     // 上传到 R2
     await R2.upload({
@@ -38,35 +128,35 @@ export async function saveProcessingResult(
       ContentType: mimeType,
     }).promise();
 
-    console.log(`Processing result uploaded to R2: ${r2Key}`);
+    console.log(`Processing result detail uploaded to R2: ${r2Key}`);
 
     // 创建数据库记录
     const result = await db.query(
-      `INSERT INTO processing_results 
-       (upload_file_id, result_type, r2_key, file_size, mime_type, processing_time_ms) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
+      `INSERT INTO processing_results_detail
+       (upload_file_id, result_type, r2_key, file_size, mime_type)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [uploadFileId, resultType, r2Key, resultBuffer.length, mimeType, processingTimeMs || null]
+      [uploadFileId, resultType, r2Key, resultBuffer.length, mimeType]
     );
 
     return result.rows[0];
   } catch (error) {
-    console.error('Error saving processing result:', error);
+    console.error('Error saving processing result detail:', error);
     throw error;
   }
 }
 
 /**
- * 获取文件的所有处理结果
+ * 获取文件的所有处理结果详情
  * @param uploadFileId 上传文件ID
- * @returns 处理结果列表（包含下载URL）
+ * @returns 处理结果详情列表（包含下载URL）
  */
-export async function getProcessingResults(uploadFileId: number) {
+export async function getProcessingResultDetails(uploadFileId: number) {
   const db = getDb();
 
   try {
     const result = await db.query(
-      `SELECT * FROM processing_results WHERE upload_file_id = $1 ORDER BY created_at ASC`,
+      `SELECT * FROM processing_results_detail WHERE upload_file_id = $1 ORDER BY created_at ASC`,
       [uploadFileId]
     );
 
@@ -76,85 +166,73 @@ export async function getProcessingResults(uploadFileId: number) {
       download_url: `${storageURL}/${row.r2_key}`
     }));
   } catch (error) {
-    console.error('Error getting processing results:', error);
+    console.error('Error getting processing result details:', error);
     throw error;
   }
 }
 
 /**
- * 获取特定类型的处理结果
- * @param uploadFileId 上传文件ID
- * @param resultType 结果类型
- */
-export async function getProcessingResultByType(
-  uploadFileId: number,
-  resultType: string
-) {
-  const db = getDb();
-
-  try {
-    const result = await db.query(
-      `SELECT * FROM processing_results 
-       WHERE upload_file_id = $1 AND result_type = $2`,
-      [uploadFileId, resultType]
-    );
-
-    if (result.rows.length === 0) {
-      return null;
-    }
-
-    const row = result.rows[0];
-    return {
-      ...row,
-      download_url: `${storageURL}/${row.r2_key}`
-    };
-  } catch (error) {
-    console.error('Error getting processing result by type:', error);
-    throw error;
-  }
-}
-
-/**
- * 获取批次的所有处理结果
+ * 获取批次的所有处理结果（包含任务状态和详情）
  * @param batchId 批次ID
  */
 export async function getProcessingResultsByBatchId(batchId: string) {
   const db = getDb();
 
   try {
-    const result = await db.query(
-      `SELECT pr.*, uf.original_file_name, uf.batch_id 
+    // 获取批次的所有文件及其任务状态
+    const taskResult = await db.query(
+      `SELECT pr.*, uf.original_file_name, uf.batch_id, uf.id as file_id
        FROM processing_results pr
        JOIN upload_files uf ON pr.upload_file_id = uf.id
        WHERE uf.batch_id = $1
-       ORDER BY uf.created_at ASC, pr.created_at ASC`,
+       ORDER BY uf.created_at ASC`,
+      [batchId]
+    );
+
+    // 获取所有结果详情
+    const detailResult = await db.query(
+      `SELECT prd.*, uf.id as file_id
+       FROM processing_results_detail prd
+       JOIN upload_files uf ON prd.upload_file_id = uf.id
+       WHERE uf.batch_id = $1
+       ORDER BY prd.created_at ASC`,
       [batchId]
     );
 
     // 按文件分组
     const groupedResults: { [key: number]: any } = {};
-    
-    result.rows.forEach(row => {
-      const fileId = row.upload_file_id;
-      
+
+    taskResult.rows.forEach(row => {
+      const fileId = row.file_id;
+
       if (!groupedResults[fileId]) {
         groupedResults[fileId] = {
           upload_file_id: fileId,
           original_file_name: row.original_file_name,
+          task_id: row.task_id,
+          task_status: row.task_status,
+          task_message: row.task_message,
+          processing_time_ms: row.processing_time_ms,
           results: []
         };
       }
+    });
 
-      groupedResults[fileId].results.push({
-        id: row.id,
-        result_type: row.result_type,
-        r2_key: row.r2_key,
-        file_size: row.file_size,
-        mime_type: row.mime_type,
-        processing_time_ms: row.processing_time_ms,
-        created_at: row.created_at,
-        download_url: `${storageURL}/${row.r2_key}`
-      });
+    // 添加结果详情
+    detailResult.rows.forEach(row => {
+      const fileId = row.file_id;
+
+      if (groupedResults[fileId]) {
+        groupedResults[fileId].results.push({
+          id: row.id,
+          result_type: row.result_type,
+          r2_key: row.r2_key,
+          file_size: row.file_size,
+          mime_type: row.mime_type,
+          created_at: row.created_at,
+          download_url: `${storageURL}/${row.r2_key}`
+        });
+      }
     });
 
     return Object.values(groupedResults);
@@ -165,21 +243,21 @@ export async function getProcessingResultsByBatchId(batchId: string) {
 }
 
 /**
- * 删除处理结果（从数据库和 R2）
- * @param resultId 结果ID
+ * 删除处理结果详情（从数据库和 R2）
+ * @param resultId 结果详情ID
  */
-export async function deleteProcessingResult(resultId: number) {
+export async function deleteProcessingResultDetail(resultId: number) {
   const db = getDb();
 
   try {
     // 获取结果信息
     const result = await db.query(
-      `SELECT * FROM processing_results WHERE id = $1`,
+      `SELECT * FROM processing_results_detail WHERE id = $1`,
       [resultId]
     );
 
     if (result.rows.length === 0) {
-      throw new Error('Processing result not found');
+      throw new Error('Processing result detail not found');
     }
 
     const row = result.rows[0];
@@ -192,13 +270,13 @@ export async function deleteProcessingResult(resultId: number) {
 
     // 从数据库删除
     await db.query(
-      `DELETE FROM processing_results WHERE id = $1`,
+      `DELETE FROM processing_results_detail WHERE id = $1`,
       [resultId]
     );
 
-    console.log(`Processing result deleted: ${resultId}`);
+    console.log(`Processing result detail deleted: ${resultId}`);
   } catch (error) {
-    console.error('Error deleting processing result:', error);
+    console.error('Error deleting processing result detail:', error);
     throw error;
   }
 }

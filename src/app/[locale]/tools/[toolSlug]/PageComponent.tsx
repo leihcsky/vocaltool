@@ -12,9 +12,7 @@ import {
   MusicalNoteIcon,
   CheckCircleIcon,
   ArrowDownTrayIcon,
-  XMarkIcon,
-  PlayIcon,
-  PauseIcon
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import Markdown from "react-markdown";
 import { v4 as uuidv4 } from 'uuid';
@@ -33,10 +31,17 @@ interface UploadedFileInfo {
 interface ProcessingResult {
   file_id: number;
   original_file_name: string;
-  results: {
-    vocals?: { download_url: string; file_size: number };
-    instrumental?: { download_url: string; file_size: number };
-  };
+  task_id?: string;
+  task_status?: string;
+  task_message?: string;
+  processing_time_ms?: number;
+  results: Array<{
+    id: number;
+    result_type: string;
+    r2_key: string;
+    download_url: string;
+    file_size: number;
+  }>;
 }
 
 const PageComponent = ({
@@ -57,10 +62,7 @@ const PageComponent = ({
   const [usageLimit, setUsageLimit] = useState<{ remaining: number; limit: number } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  // 音频播放状态
-  const [playingTrack, setPlayingTrack] = useState<'vocals' | 'instrumental' | null>(null);
-  const vocalsAudioRef = useRef<HTMLAudioElement>(null);
-  const instrumentalAudioRef = useRef<HTMLAudioElement>(null);
+
 
   const { setShowLoadingModal, userData } = useCommonContext();
   const { fingerprint, isLoading: fingerprintLoading } = useFingerprint();
@@ -209,8 +211,8 @@ const PageComponent = ({
       }));
       setUploadedFiles(updatedFiles);
 
-      // 开始处理
-      await startProcessing(updatedFiles);
+      // 开始处理，传递 batch ID
+      await startProcessing(updatedFiles, batch);
     } catch (error) {
       console.error('Upload failed:', error);
       setErrorMessage('Upload failed. Please try again.');
@@ -218,13 +220,14 @@ const PageComponent = ({
     }
   };
 
-  // 开始处理
-  const startProcessing = async (files: UploadedFileInfo[]) => {
+  // 开始处理 - 调用后端 process API
+  const startProcessing = async (files: UploadedFileInfo[], batch: string) => {
     setStage('processing');
 
     try {
-      // 并行处理所有文件
-      const processingPromises = files.map(async (fileInfo) => {
+      // 为每个文件调用 process API
+      // 后端会自动处理：提交任务 → 轮询状态 → 下载结果 → 保存到数据库
+      const processPromises = files.map(async (fileInfo) => {
         const response = await fetch('/api/audio/process', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -236,27 +239,44 @@ const PageComponent = ({
         });
 
         const result = await response.json();
-        return { fileInfo, result };
+
+        if (result.success) {
+          return {
+            ...fileInfo,
+            status: 'processed' as const
+          };
+        } else {
+          throw new Error(result.message);
+        }
       });
 
-      await Promise.all(processingPromises);
+      await Promise.all(processPromises);
 
-      // 获取处理结果
-      await fetchResults();
+      // 处理完成，获取结果
+      await fetchResults(batch);
     } catch (error) {
-      console.error('Processing failed:', error);
-      setErrorMessage('Processing failed. Please try again.');
+      console.error('Failed to process files:', error);
+      setErrorMessage('Failed to process audio files. Please try again.');
       setStage('error');
     }
   };
 
   // 获取处理结果
-  const fetchResults = async () => {
+  const fetchResults = async (batch?: string) => {
+    const targetBatchId = batch || batchId;
+
+    if (!targetBatchId) {
+      console.error('No batch_id available');
+      setErrorMessage('No batch ID found.');
+      setStage('error');
+      return;
+    }
+
     try {
       const response = await fetch('/api/audio/getResults', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ batch_id: batchId })
+        body: JSON.stringify({ batch_id: targetBatchId })
       });
 
       const result = await response.json();
@@ -266,10 +286,11 @@ const PageComponent = ({
         const formattedResults: ProcessingResult[] = result.data.results.map((item: any) => ({
           file_id: item.upload_file_id,
           original_file_name: item.original_file_name,
-          results: {
-            vocals: item.results.find((r: any) => r.result_type === 'vocals'),
-            instrumental: item.results.find((r: any) => r.result_type === 'instrumental')
-          }
+          task_id: item.task_id,
+          task_status: item.task_status,
+          task_message: item.task_message,
+          processing_time_ms: item.processing_time_ms,
+          results: item.results || []
         }));
 
         setProcessingResults(formattedResults);
@@ -292,29 +313,23 @@ const PageComponent = ({
     setSelectedFileIndex(0);
   };
 
-  // 音频播放控制
-  const togglePlay = (track: 'vocals' | 'instrumental') => {
-    const audioRef = track === 'vocals' ? vocalsAudioRef : instrumentalAudioRef;
-    const otherRef = track === 'vocals' ? instrumentalAudioRef : vocalsAudioRef;
-
-    if (playingTrack === track) {
-      audioRef.current?.pause();
-      setPlayingTrack(null);
-    } else {
-      otherRef.current?.pause();
-      audioRef.current?.play();
-      setPlayingTrack(track);
-    }
-  };
-
   // 下载文件
-  const handleDownload = (url: string, filename: string) => {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const handleDownload = async (r2_key: string, filename: string) => {
+    try {
+      // 使用后端代理下载，避免跨域问题
+      const downloadUrl = `/api/audio/download?r2_key=${encodeURIComponent(r2_key)}&filename=${encodeURIComponent(filename)}`;
+
+      // 创建下载链接
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+      setErrorMessage('Failed to download file. Please try again.');
+    }
   };
 
   // Generate tool-specific keywords
@@ -485,6 +500,28 @@ const PageComponent = ({
                       <p className="text-neutral-600">AI is separating vocals and instrumentals</p>
                       <p className="text-sm text-neutral-500 mt-2">This may take 1-3 minutes per file</p>
                     </div>
+
+                    {/* 显示处理进度 */}
+                    <div className="space-y-3">
+                      {uploadedFiles.map((fileInfo, index) => (
+                        <div key={index} className="p-4 bg-neutral-50 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <MusicalNoteIcon className="w-6 h-6 text-brand-600" />
+                              <div>
+                                <p className="font-semibold text-neutral-900">{fileInfo.file.name}</p>
+                                <p className="text-sm text-neutral-600">Processing audio...</p>
+                              </div>
+                            </div>
+                            <svg className="animate-spin h-5 w-5 text-brand-600" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
                     <button onClick={handleCancel} className="w-full btn-secondary">
                       Cancel
                     </button>
@@ -525,99 +562,67 @@ const PageComponent = ({
                     {/* 当前选中文件的结果 */}
                     {processingResults[selectedFileIndex] && (
                       <div className="space-y-4">
-                        <h4 className="font-semibold text-neutral-900 text-center">
-                          {processingResults[selectedFileIndex].original_file_name}
-                        </h4>
+                        <div className="text-center">
+                          <h4 className="font-semibold text-neutral-900">
+                            {processingResults[selectedFileIndex].original_file_name}
+                          </h4>
+                          {processingResults[selectedFileIndex].processing_time_ms && (
+                            <p className="text-sm text-neutral-600 mt-1">
+                              Processing time: {(processingResults[selectedFileIndex].processing_time_ms! / 1000).toFixed(1)}s
+                            </p>
+                          )}
+                        </div>
 
-                        {/* Vocals 音轨 */}
-                        {processingResults[selectedFileIndex].results.vocals && (
-                          <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                <MusicalNoteIcon className="w-6 h-6 text-purple-600" />
-                                <div>
-                                  <h5 className="font-semibold text-neutral-900">Vocals</h5>
-                                  <p className="text-sm text-neutral-600">
-                                    {(processingResults[selectedFileIndex].results.vocals!.file_size / 1024 / 1024).toFixed(2)} MB
-                                  </p>
+                        {/* 显示所有结果文件 */}
+                        {processingResults[selectedFileIndex].results.map((result, idx) => {
+                          const isNoVocals = result.result_type.includes('no_vocals');
+                          const isVocals = result.result_type.includes('vocals') && !isNoVocals;
+
+                          return (
+                            <div
+                              key={idx}
+                              className={`p-6 rounded-xl border ${
+                                isVocals
+                                  ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200'
+                                  : 'bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                  <MusicalNoteIcon className={`w-6 h-6 ${isVocals ? 'text-purple-600' : 'text-blue-600'}`} />
+                                  <div>
+                                    <h5 className="font-semibold text-neutral-900">
+                                      {isVocals ? 'Vocals' : isNoVocals ? 'Instrumental (No Vocals)' : result.result_type}
+                                    </h5>
+                                    <p className="text-sm text-neutral-600">
+                                      {(result.file_size / 1024 / 1024).toFixed(2)} MB
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleDownload(
+                                      result.r2_key,
+                                      result.result_type
+                                    )}
+                                    className={`p-3 bg-white rounded-lg transition-colors ${
+                                      isVocals
+                                        ? 'hover:bg-purple-100'
+                                        : 'hover:bg-blue-100'
+                                    }`}
+                                  >
+                                    <ArrowDownTrayIcon className={`w-5 h-5 ${isVocals ? 'text-purple-600' : 'text-blue-600'}`} />
+                                  </button>
                                 </div>
                               </div>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => togglePlay('vocals')}
-                                  className="p-3 bg-white rounded-lg hover:bg-purple-100 transition-colors"
-                                >
-                                  {playingTrack === 'vocals' ? (
-                                    <PauseIcon className="w-5 h-5 text-purple-600" />
-                                  ) : (
-                                    <PlayIcon className="w-5 h-5 text-purple-600" />
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => handleDownload(
-                                    processingResults[selectedFileIndex].results.vocals!.download_url,
-                                    `${processingResults[selectedFileIndex].original_file_name}_vocals.wav`
-                                  )}
-                                  className="p-3 bg-white rounded-lg hover:bg-purple-100 transition-colors"
-                                >
-                                  <ArrowDownTrayIcon className="w-5 h-5 text-purple-600" />
-                                </button>
-                              </div>
+                              <audio
+                                src={result.download_url}
+                                className="w-full"
+                                controls
+                              />
                             </div>
-                            <audio
-                              ref={vocalsAudioRef}
-                              src={processingResults[selectedFileIndex].results.vocals!.download_url}
-                              onEnded={() => setPlayingTrack(null)}
-                              className="w-full"
-                              controls
-                            />
-                          </div>
-                        )}
-
-                        {/* Instrumental 音轨 */}
-                        {processingResults[selectedFileIndex].results.instrumental && (
-                          <div className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-200">
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                <MusicalNoteIcon className="w-6 h-6 text-blue-600" />
-                                <div>
-                                  <h5 className="font-semibold text-neutral-900">Instrumental</h5>
-                                  <p className="text-sm text-neutral-600">
-                                    {(processingResults[selectedFileIndex].results.instrumental!.file_size / 1024 / 1024).toFixed(2)} MB
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => togglePlay('instrumental')}
-                                  className="p-3 bg-white rounded-lg hover:bg-blue-100 transition-colors"
-                                >
-                                  {playingTrack === 'instrumental' ? (
-                                    <PauseIcon className="w-5 h-5 text-blue-600" />
-                                  ) : (
-                                    <PlayIcon className="w-5 h-5 text-blue-600" />
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => handleDownload(
-                                    processingResults[selectedFileIndex].results.instrumental!.download_url,
-                                    `${processingResults[selectedFileIndex].original_file_name}_instrumental.wav`
-                                  )}
-                                  className="p-3 bg-white rounded-lg hover:bg-blue-100 transition-colors"
-                                >
-                                  <ArrowDownTrayIcon className="w-5 h-5 text-blue-600" />
-                                </button>
-                              </div>
-                            </div>
-                            <audio
-                              ref={instrumentalAudioRef}
-                              src={processingResults[selectedFileIndex].results.instrumental!.download_url}
-                              onEnded={() => setPlayingTrack(null)}
-                              className="w-full"
-                              controls
-                            />
-                          </div>
-                        )}
+                          );
+                        })}
                       </div>
                     )}
 

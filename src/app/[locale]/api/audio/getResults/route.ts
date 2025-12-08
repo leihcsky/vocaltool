@@ -9,7 +9,7 @@
  * }
  */
 
-import { getProcessingResults, getProcessingResultsByBatchId } from "~/servers/processingResult";
+import { getProcessingTask, getProcessingResultDetails, getProcessingResultsByBatchId } from "~/servers/processingResult";
 import { getFileById, getFilesByBatchId } from "~/servers/uploadFile";
 
 export async function POST(req: Request) {
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     if (file_id) {
       // 获取单个文件的结果
       const fileInfo = await getFileById(file_id);
-      
+
       if (!fileInfo) {
         return Response.json({
           success: false,
@@ -36,19 +36,21 @@ export async function POST(req: Request) {
         }, { status: 404 });
       }
 
-      const results = await getProcessingResults(file_id);
+      const taskInfo = await getProcessingTask(file_id);
+      const resultDetails = await getProcessingResultDetails(file_id);
 
       return Response.json({
         success: true,
         data: {
           file: fileInfo,
-          results
+          task: taskInfo,
+          results: resultDetails
         }
       });
     } else {
       // 获取批次的所有结果
       const files = await getFilesByBatchId(batch_id);
-      
+
       if (files.length === 0) {
         return Response.json({
           success: false,
