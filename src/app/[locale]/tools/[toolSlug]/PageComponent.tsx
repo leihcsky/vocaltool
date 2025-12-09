@@ -67,7 +67,7 @@ const PageComponent = ({
   const [audioFormats, setAudioFormats] = useState<Record<string, 'mp3' | 'wav'>>({});
   const [subscribeStatus, setSubscribeStatus] = useState<string>('');
 
-  const { setShowLoadingModal, setShowPricingModal, userData } = useCommonContext();
+  const { setShowLoadingModal, setShowPricingModal, setShowLoginModal, userData } = useCommonContext();
   const { fingerprint, isLoading: fingerprintLoading } = useFingerprint();
   const { data: session, status } = useSession();
 
@@ -373,15 +373,8 @@ const PageComponent = ({
     try {
       console.log('[Download] Starting download:', { r2_key, filename, format, subscribeStatus });
 
-      // 检查WAV格式权限
-      if (format === 'wav' && subscribeStatus !== 'active') {
-        console.log('[Download] WAV format requires subscription, showing pricing modal');
-        console.log('[Download] Current subscribeStatus:', subscribeStatus);
-        setShowPricingModal(true);
-        return;
-      }
-
-      console.log('[Download] Permission check passed, starting download');
+      // WAV 格式已移除订阅限制，所有用户都可以下载
+      console.log('[Download] Starting download');
 
       // 使用后端代理下载，避免跨域问题
       let downloadUrl = `/api/audio/download?r2_key=${encodeURIComponent(r2_key)}&filename=${encodeURIComponent(filename)}&format=${format}`;
@@ -410,11 +403,11 @@ const PageComponent = ({
   const getToolKeywords = (slug: string) => {
     const baseKeywords = "AI audio editing, audio processing, music editing, online audio tool";
     const toolKeywords = {
-      'vocal-remover': 'vocal remover, remove vocals, instrumental maker, karaoke track, stem separation',
-      'karaoke-maker': 'karaoke maker, karaoke creator, backing track, remove vocals, sing along',
-      'extract-vocals': 'extract vocals, vocal isolation, acapella extraction, voice extractor',
-      'acapella-maker': 'acapella maker, vocal only, isolated vocals, voice track',
-      'noise-reducer': 'noise reducer, audio cleanup, remove background noise, denoise audio',
+      'vocal-remover': 'vocal remover, remove vocals, vocal removal, AI vocal remover, remove vocals from song, vocal separator, instrumental maker, karaoke track, stem separation, extract instrumental, isolate vocals, vocal isolation, music separation, AI audio separation, online vocal remover, free vocal remover',
+      'karaoke-maker': 'karaoke maker, karaoke creator, backing track, remove vocals, sing along, karaoke track maker',
+      'extract-vocals': 'extract vocals, vocal isolation, acapella extraction, voice extractor, isolate vocals',
+      'acapella-maker': 'acapella maker, vocal only, isolated vocals, voice track, acapella extractor',
+      'noise-reducer': 'noise reducer, audio cleanup, remove background noise, denoise audio, audio noise removal',
     };
     return `${baseKeywords}, ${toolKeywords[slug] || ''}`;
   };
@@ -459,7 +452,17 @@ const PageComponent = ({
                     <p className="text-sm text-blue-800">
                       {userId
                         ? `You have ${usageLimit.remaining} of ${usageLimit.limit} daily uploads remaining.`
-                        : `Free users can upload ${usageLimit.remaining} file per day. Register for more!`
+                        : (
+                          <>
+                            Free users can upload {usageLimit.remaining} file per day.{' '}
+                            <button
+                              onClick={() => setShowLoginModal(true)}
+                              className="underline font-semibold hover:text-blue-900 transition-colors"
+                            >
+                              Register
+                            </button> for more!
+                          </>
+                        )
                       }
                     </p>
                   </div>
@@ -491,6 +494,15 @@ const PageComponent = ({
                           Supports MP3, WAV, FLAC (Max 100MB)
                           {userId && ' • Upload up to 3 files at once'}
                         </p>
+
+                        {/* 使用限制提示 */}
+                        {toolPageText.usageLimitNotice && (
+                          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-sm text-blue-800">
+                              ℹ️ {toolPageText.usageLimitNotice}
+                            </p>
+                          </div>
+                        )}
                       </div>
                       <input
                         id="file-upload"
@@ -648,24 +660,13 @@ const PageComponent = ({
                                     </button>
                                     <button
                                       onClick={() => setAudioFormats(prev => ({ ...prev, [result.result_type]: 'wav' }))}
-                                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors relative flex items-center gap-1.5 ${
+                                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                                         currentFormat === 'wav'
                                           ? 'bg-brand-600 text-white'
                                           : 'text-neutral-600 hover:bg-neutral-100'
                                       }`}
                                     >
-                                      <span>WAV</span>
-                                      {subscribeStatus !== 'active' && (
-                                        <svg
-                                          className="w-4 h-4 text-amber-500"
-                                          fill="currentColor"
-                                          viewBox="0 0 24 24"
-                                          xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                          <path d="M12 2L4 7.5L6 18.5L12 22L18 18.5L20 7.5L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                                          <path d="M12 2L4 7.5L12 12L20 7.5L12 2Z" opacity="0.7"/>
-                                        </svg>
-                                      )}
+                                      WAV
                                     </button>
                                   </div>
 
@@ -711,7 +712,12 @@ const PageComponent = ({
                         ) : (
                           <>
                             ⚠️ Results are not saved for anonymous users.
-                            <a href="#" className="underline font-semibold ml-1">Register</a> to save your work!
+                            <button
+                              onClick={() => setShowLoginModal(true)}
+                              className="underline font-semibold ml-1 hover:text-brand-700 transition-colors"
+                            >
+                              Register
+                            </button> to save your work!
                           </>
                         )}
                       </p>

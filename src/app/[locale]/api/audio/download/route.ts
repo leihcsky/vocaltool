@@ -10,7 +10,7 @@
  */
 
 import { R2, r2Bucket } from "~/libs/R2";
-import { checkSubscribe } from "~/servers/subscribe";
+// import { checkSubscribe } from "~/servers/subscribe"; // WAV 格式已移除订阅限制
 import FormData from 'form-data';
 import fetch from 'node-fetch';
 
@@ -43,23 +43,24 @@ export async function GET(req: Request) {
       }, { status: 400 });
     }
 
-    // 检查 WAV 格式权限（只有订阅用户可以下载 WAV）
-    if (format === 'wav') {
-      if (!user_id) {
-        return Response.json({
-          success: false,
-          message: 'WAV format requires login and premium subscription'
-        }, { status: 401 });
-      }
-
-      const isSubscribed = await checkSubscribe(user_id);
-      if (!isSubscribed) {
-        return Response.json({
-          success: false,
-          message: 'WAV format requires premium subscription'
-        }, { status: 403 });
-      }
-    }
+    // WAV 格式已移除订阅限制，所有用户都可以下载
+    // 注释掉原有的权限检查代码
+    // if (format === 'wav') {
+    //   if (!user_id) {
+    //     return Response.json({
+    //       success: false,
+    //       message: 'WAV format requires login and premium subscription'
+    //     }, { status: 401 });
+    //   }
+    //
+    //   const isSubscribed = await checkSubscribe(user_id);
+    //   if (!isSubscribed) {
+    //     return Response.json({
+    //       success: false,
+    //       message: 'WAV format requires premium subscription'
+    //     }, { status: 403 });
+    //   }
+    // }
 
     // 从 R2 获取原始文件
     console.log('[Download] Fetching file from R2:', r2_key);

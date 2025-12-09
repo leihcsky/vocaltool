@@ -58,10 +58,10 @@ const LoginModal = ({
                                   className="gradient-text text-3xl font-bold flex justify-center items-center">
                       <a className="-m-1.5 ml-0.5 p-1.5">
                         <img
-                          className="h-8 w-auto"
-                          src="/website.svg"
-                          width={32}
-                          height={24}
+                          className="h-10 w-auto"
+                          src="/logo-final.svg"
+                          width={130}
+                          height={30}
                           alt={process.env.NEXT_PUBLIC_DOMAIN_NAME}
                         />
                       </a>

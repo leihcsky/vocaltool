@@ -25,6 +25,11 @@ export default function AudioWaveform({
   const [audioData, setAudioData] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 立即生成占位波形
+  useEffect(() => {
+    generatePlaceholderWaveform();
+  }, []);
+
   // 加载音频并生成波形数据
   useEffect(() => {
     const audio = audioRef.current;
@@ -144,6 +149,24 @@ export default function AudioWaveform({
     }
   };
 
+  // 占位波形生成（立即显示，加载时使用）
+  const generatePlaceholderWaveform = () => {
+    const samples = 200;
+    const data: number[] = [];
+
+    for (let i = 0; i < samples; i++) {
+      // 创建简单的占位波形
+      const t = i / samples;
+      const sine1 = Math.sin(t * Math.PI * 4) * 0.3;
+      const sine2 = Math.sin(t * Math.PI * 8) * 0.2;
+      const value = Math.abs(sine1 + sine2) + 0.1;
+      data.push(Math.min(0.6, value)); // 限制高度，显示为占位状态
+    }
+
+    setAudioData(data);
+    setIsLoading(true);
+  };
+
   // 备用波形生成（如果真实数据加载失败）
   const generateFallbackWaveform = () => {
     const samples = 200;
@@ -161,6 +184,7 @@ export default function AudioWaveform({
     }
 
     setAudioData(data);
+    setIsLoading(false);
   };
 
   // 绘制波形
@@ -187,7 +211,13 @@ export default function AudioWaveform({
 
       // 根据播放进度设置颜色
       const isPlayed = index / audioData.length < progress;
-      ctx.fillStyle = isPlayed ? progressColor : waveColor;
+
+      // 如果正在加载，使用半透明颜色显示占位波形
+      if (isLoading) {
+        ctx.fillStyle = isPlayed ? progressColor + '40' : waveColor + '40'; // 添加透明度
+      } else {
+        ctx.fillStyle = isPlayed ? progressColor : waveColor;
+      }
 
       // 绘制圆角矩形
       const radius = Math.min(barWidth / 4, 1.5);

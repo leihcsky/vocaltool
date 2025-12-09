@@ -52,8 +52,8 @@ export default function Footer({
               href={getLinkHref(locale, '')}
             >
               <img
-                className="h-10"
-                src="/website.svg"
+                className="h-10 w-auto"
+                src="/logo-final.svg"
                 alt={process.env.NEXT_PUBLIC_DOMAIN_NAME}
               />
             </Link>
