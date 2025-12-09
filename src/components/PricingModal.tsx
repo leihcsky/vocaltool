@@ -1,5 +1,6 @@
 import {Fragment, useRef, useState} from 'react'
 import {Dialog, Transition} from '@headlessui/react'
+import {XMarkIcon} from '@heroicons/react/24/outline'
 import Pricing from "~/components/PricingComponent";
 import {useCommonContext} from "~/context/common-context";
 
@@ -40,6 +41,15 @@ export default function PricingModal({
               leaveTo="opacity-0 translate-y-4"
             >
               <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl">
+                {/* 关闭按钮 */}
+                <button
+                  onClick={() => setShowPricingModal(false)}
+                  className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white hover:bg-gray-100 shadow-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <XMarkIcon className="w-6 h-6 text-gray-600" />
+                </button>
+
                 <Pricing
                   redirectUrl={redirectUrl}
                 />

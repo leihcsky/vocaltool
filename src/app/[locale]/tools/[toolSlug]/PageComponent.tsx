@@ -3,6 +3,8 @@ import HeadInfo from "~/components/HeadInfo";
 import Header from "~/components/Header";
 import Footer from "~/components/Footer";
 import ToolsSidebar from "~/components/ToolsSidebar";
+import AudioWaveform from "~/components/AudioWaveform";
+import PricingModal from "~/components/PricingModal";
 import { useState, useEffect, useRef } from "react";
 import { useCommonContext } from "~/context/common-context";
 import { useFingerprint } from "~/hooks/useFingerprint";
@@ -61,10 +63,11 @@ const PageComponent = ({
   const [selectedFileIndex, setSelectedFileIndex] = useState<number>(0);
   const [usageLimit, setUsageLimit] = useState<{ remaining: number; limit: number } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  // 为每个音轨单独管理格式状态 (key: result_type, value: format)
+  const [audioFormats, setAudioFormats] = useState<Record<string, 'mp3' | 'wav'>>({});
+  const [subscribeStatus, setSubscribeStatus] = useState<string>('');
 
-
-
-  const { setShowLoadingModal, userData } = useCommonContext();
+  const { setShowLoadingModal, setShowPricingModal, userData } = useCommonContext();
   const { fingerprint, isLoading: fingerprintLoading } = useFingerprint();
   const { data: session, status } = useSession();
 
@@ -105,6 +108,13 @@ const PageComponent = ({
     }
   }, [fingerprint, fingerprintLoading, userId]);
 
+  // 获取用户订阅状态
+  useEffect(() => {
+    if (userId) {
+      fetchSubscribeStatus();
+    }
+  }, [userId]);
+
   const checkLimit = async () => {
     try {
       const response = await fetch('/api/audio/checkLimit', {
@@ -123,6 +133,18 @@ const PageComponent = ({
       }
     } catch (error) {
       console.error('Failed to check usage limit:', error);
+    }
+  };
+
+  const fetchSubscribeStatus = async () => {
+    try {
+      const response = await fetch(`/api/user/getAvailableTimes?userId=${userId}`);
+      const result = await response.json();
+      if (result.subscribeStatus) {
+        setSubscribeStatus(result.subscribeStatus);
+      }
+    } catch (error) {
+      console.error('Failed to fetch subscribe status:', error);
     }
   };
 
@@ -169,15 +191,27 @@ const PageComponent = ({
 
     setUploadedFiles(validFiles);
     setErrorMessage('');
+
+    // 自动开始上传和处理
+    setTimeout(() => {
+      handleStartUpload(validFiles);
+    }, 100);
   };
 
   // 开始上传
-  const handleStartUpload = async () => {
-    if (uploadedFiles.length === 0) return;
+  const handleStartUpload = async (filesToUpload?: UploadedFileInfo[]) => {
+    const files = filesToUpload || uploadedFiles;
+    console.log('[Upload] Starting upload with files:', files.length);
+
+    if (files.length === 0) {
+      console.error('[Upload] No files to upload');
+      return;
+    }
 
     setStage('uploading');
     const batch = uuidv4();
     setBatchId(batch);
+    console.log('[Upload] Batch ID:', batch);
 
     try {
       const formData = new FormData();
@@ -186,35 +220,41 @@ const PageComponent = ({
       formData.append('tool_type', toolCode);
       formData.append('batch_id', batch);
 
-      uploadedFiles.forEach((fileInfo, index) => {
+      files.forEach((fileInfo, index) => {
         formData.append(`file${index}`, fileInfo.file);
       });
 
+      console.log('[Upload] Sending upload request...');
       const response = await fetch('/api/audio/upload', {
         method: 'POST',
         body: formData
       });
 
       const result = await response.json();
+      console.log('[Upload] Upload response:', result);
 
       if (!result.success) {
+        console.error('[Upload] Upload failed:', result.message);
         setErrorMessage(result.message);
         setStage('error');
         return;
       }
 
-      // 更新文件ID
-      const updatedFiles = uploadedFiles.map((fileInfo, index) => ({
+      // 更新文件ID - 使用传入的 files 参数而不是 uploadedFiles 状态
+      console.log('[Upload] Files uploaded successfully, updating file IDs...');
+      const updatedFiles = files.map((fileInfo, index) => ({
         ...fileInfo,
         id: result.data.files[index].id,
         status: 'uploaded' as const
       }));
       setUploadedFiles(updatedFiles);
+      console.log('[Upload] Updated files:', updatedFiles);
 
       // 开始处理，传递 batch ID
+      console.log('[Upload] Starting processing...');
       await startProcessing(updatedFiles, batch);
     } catch (error) {
-      console.error('Upload failed:', error);
+      console.error('[Upload] Upload failed with error:', error);
       setErrorMessage('Upload failed. Please try again.');
       setStage('error');
     }
@@ -222,12 +262,15 @@ const PageComponent = ({
 
   // 开始处理 - 调用后端 process API
   const startProcessing = async (files: UploadedFileInfo[], batch: string) => {
+    console.log('[Processing] Starting processing for', files.length, 'files');
     setStage('processing');
 
     try {
       // 为每个文件调用 process API
       // 后端会自动处理：提交任务 → 轮询状态 → 下载结果 → 保存到数据库
-      const processPromises = files.map(async (fileInfo) => {
+      const processPromises = files.map(async (fileInfo, index) => {
+        console.log(`[Processing] Processing file ${index + 1}/${files.length}, ID:`, fileInfo.id);
+
         const response = await fetch('/api/audio/process', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -239,6 +282,7 @@ const PageComponent = ({
         });
 
         const result = await response.json();
+        console.log(`[Processing] File ${index + 1} result:`, result);
 
         if (result.success) {
           return {
@@ -250,12 +294,15 @@ const PageComponent = ({
         }
       });
 
+      console.log('[Processing] Waiting for all files to complete...');
       await Promise.all(processPromises);
+      console.log('[Processing] All files processed successfully');
 
       // 处理完成，获取结果
+      console.log('[Processing] Fetching results...');
       await fetchResults(batch);
     } catch (error) {
-      console.error('Failed to process files:', error);
+      console.error('[Processing] Failed to process files:', error);
       setErrorMessage('Failed to process audio files. Please try again.');
       setStage('error');
     }
@@ -264,9 +311,10 @@ const PageComponent = ({
   // 获取处理结果
   const fetchResults = async (batch?: string) => {
     const targetBatchId = batch || batchId;
+    console.log('[Results] Fetching results for batch:', targetBatchId);
 
     if (!targetBatchId) {
-      console.error('No batch_id available');
+      console.error('[Results] No batch_id available');
       setErrorMessage('No batch ID found.');
       setStage('error');
       return;
@@ -280,6 +328,7 @@ const PageComponent = ({
       });
 
       const result = await response.json();
+      console.log('[Results] Results response:', result);
 
       if (result.success) {
         // 转换结果格式
@@ -293,11 +342,17 @@ const PageComponent = ({
           results: item.results || []
         }));
 
+        console.log('[Results] Formatted results:', formattedResults);
         setProcessingResults(formattedResults);
         setStage('completed');
+        console.log('[Results] Stage set to completed');
+      } else {
+        console.error('[Results] Failed to get results:', result.message);
+        setErrorMessage(result.message || 'Failed to fetch results.');
+        setStage('error');
       }
     } catch (error) {
-      console.error('Failed to fetch results:', error);
+      console.error('[Results] Failed to fetch results:', error);
       setErrorMessage('Failed to fetch results.');
       setStage('error');
     }
@@ -314,20 +369,39 @@ const PageComponent = ({
   };
 
   // 下载文件
-  const handleDownload = async (r2_key: string, filename: string) => {
+  const handleDownload = async (r2_key: string, filename: string, format: 'mp3' | 'wav') => {
     try {
+      console.log('[Download] Starting download:', { r2_key, filename, format, subscribeStatus });
+
+      // 检查WAV格式权限
+      if (format === 'wav' && subscribeStatus !== 'active') {
+        console.log('[Download] WAV format requires subscription, showing pricing modal');
+        console.log('[Download] Current subscribeStatus:', subscribeStatus);
+        setShowPricingModal(true);
+        return;
+      }
+
+      console.log('[Download] Permission check passed, starting download');
+
       // 使用后端代理下载，避免跨域问题
-      const downloadUrl = `/api/audio/download?r2_key=${encodeURIComponent(r2_key)}&filename=${encodeURIComponent(filename)}`;
+      let downloadUrl = `/api/audio/download?r2_key=${encodeURIComponent(r2_key)}&filename=${encodeURIComponent(filename)}&format=${format}`;
+      if (userId) {
+        downloadUrl += `&user_id=${userId}`;
+      }
+
+      console.log('[Download] Download URL:', downloadUrl);
 
       // 创建下载链接
       const a = document.createElement('a');
       a.href = downloadUrl;
-      a.download = filename;
+      a.download = filename.replace(/\.(mp3|wav)$/i, `.${format}`);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+
+      console.log('[Download] Download triggered successfully');
     } catch (error) {
-      console.error('Download failed:', error);
+      console.error('[Download] Download failed:', error);
       setErrorMessage('Failed to download file. Please try again.');
     }
   };
@@ -366,7 +440,7 @@ const PageComponent = ({
         {/* Main Content */}
         <main className="flex-1 min-h-screen bg-gradient-to-b from-white to-neutral-50">
           {/* Hero Section */}
-          <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
             <div className="text-center mb-12">
               <h1 className="text-4xl sm:text-5xl font-bold text-neutral-900 mb-4">
                 {toolPageText.h1Text}
@@ -377,7 +451,7 @@ const PageComponent = ({
             </div>
 
             {/* Upload Section */}
-            <div className="max-w-4xl mx-auto">
+            <div className={stage === 'completed' ? 'max-w-6xl mx-auto' : 'max-w-4xl mx-auto'}>
               <div className="bg-white rounded-2xl shadow-lg border border-neutral-200 p-8 sm:p-12">
                 {/* 使用限制提示 */}
                 {usageLimit && stage === 'upload' && (
@@ -430,45 +504,7 @@ const PageComponent = ({
                   </div>
                 )}
 
-                {/* 文件列表（上传前） */}
-                {stage === 'upload' && uploadedFiles.length > 0 && (
-                  <div className="space-y-4">
-                    {uploadedFiles.map((fileInfo, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <MusicalNoteIcon className="w-8 h-8 text-brand-600" />
-                          <div>
-                            <p className="font-semibold text-neutral-900">{fileInfo.file.name}</p>
-                            <p className="text-sm text-neutral-600">
-                              {(fileInfo.file.size / 1024 / 1024).toFixed(2)} MB
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => setUploadedFiles(files => files.filter((_, i) => i !== index))}
-                          className="text-neutral-600 hover:text-neutral-900"
-                        >
-                          <XMarkIcon className="w-5 h-5" />
-                        </button>
-                      </div>
-                    ))}
 
-                    <div className="flex gap-3">
-                      <button
-                        onClick={handleStartUpload}
-                        className="flex-1 btn-primary"
-                      >
-                        Start Processing
-                      </button>
-                      <button
-                        onClick={() => setUploadedFiles([])}
-                        className="px-6 py-3 border border-neutral-300 rounded-lg hover:bg-neutral-50"
-                      >
-                        Clear All
-                      </button>
-                    </div>
-                  </div>
-                )}
 
                 {/* 上传中 */}
                 {stage === 'uploading' && (
@@ -577,6 +613,7 @@ const PageComponent = ({
                         {processingResults[selectedFileIndex].results.map((result, idx) => {
                           const isNoVocals = result.result_type.includes('no_vocals');
                           const isVocals = result.result_type.includes('vocals') && !isNoVocals;
+                          const currentFormat = audioFormats[result.result_type] || 'mp3';
 
                           return (
                             <div
@@ -594,18 +631,52 @@ const PageComponent = ({
                                     <h5 className="font-semibold text-neutral-900">
                                       {isVocals ? 'Vocals' : isNoVocals ? 'Instrumental (No Vocals)' : result.result_type}
                                     </h5>
-                                    <p className="text-sm text-neutral-600">
-                                      {(result.file_size / 1024 / 1024).toFixed(2)} MB
-                                    </p>
                                   </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex items-center gap-3">
+                                  {/* 格式选择 */}
+                                  <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm">
+                                    <button
+                                      onClick={() => setAudioFormats(prev => ({ ...prev, [result.result_type]: 'mp3' }))}
+                                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                                        currentFormat === 'mp3'
+                                          ? 'bg-brand-600 text-white'
+                                          : 'text-neutral-600 hover:bg-neutral-100'
+                                      }`}
+                                    >
+                                      MP3
+                                    </button>
+                                    <button
+                                      onClick={() => setAudioFormats(prev => ({ ...prev, [result.result_type]: 'wav' }))}
+                                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors relative flex items-center gap-1.5 ${
+                                        currentFormat === 'wav'
+                                          ? 'bg-brand-600 text-white'
+                                          : 'text-neutral-600 hover:bg-neutral-100'
+                                      }`}
+                                    >
+                                      <span>WAV</span>
+                                      {subscribeStatus !== 'active' && (
+                                        <svg
+                                          className="w-4 h-4 text-amber-500"
+                                          fill="currentColor"
+                                          viewBox="0 0 24 24"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                          <path d="M12 2L4 7.5L6 18.5L12 22L18 18.5L20 7.5L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                                          <path d="M12 2L4 7.5L12 12L20 7.5L12 2Z" opacity="0.7"/>
+                                        </svg>
+                                      )}
+                                    </button>
+                                  </div>
+
+                                  {/* 下载按钮 */}
                                   <button
                                     onClick={() => handleDownload(
                                       result.r2_key,
-                                      result.result_type
+                                      result.result_type,
+                                      currentFormat
                                     )}
-                                    className={`p-3 bg-white rounded-lg transition-colors ${
+                                    className={`p-3 bg-white rounded-lg shadow-sm transition-colors ${
                                       isVocals
                                         ? 'hover:bg-purple-100'
                                         : 'hover:bg-blue-100'
@@ -615,10 +686,13 @@ const PageComponent = ({
                                   </button>
                                 </div>
                               </div>
-                              <audio
-                                src={result.download_url}
-                                className="w-full"
-                                controls
+
+                              {/* 音频波形播放器 */}
+                              <AudioWaveform
+                                audioUrl={result.download_url}
+                                waveColor={isVocals ? '#9333ea' : '#2563eb'}
+                                progressColor={isVocals ? '#c084fc' : '#60a5fa'}
+                                height={60}
                               />
                             </div>
                           );
@@ -775,6 +849,9 @@ const PageComponent = ({
       </div>
 
       <Footer locale={locale} page="tools" />
+
+      {/* Pricing Modal */}
+      <PricingModal locale={locale} page={`tools/${toolSlug}`} />
     </>
   );
 };
