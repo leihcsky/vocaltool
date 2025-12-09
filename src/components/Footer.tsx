@@ -57,36 +57,37 @@ export default function Footer({
                 alt={process.env.NEXT_PUBLIC_DOMAIN_NAME}
               />
             </Link>
-            <p className="text-sm text-gray-300">
+            <p className="text-sm text-gray-600">
               {commonText.footerDescText}
             </p>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <div className="text-sm font-semibold leading-6 text-white"></div>
+                <div className="text-sm font-semibold leading-6 text-white">{menuText.footerCompany}</div>
                 <ul role="list" className="mt-6 space-y-4">
-
+                  <li>
+                    <Link
+                      href={getLinkHref(locale, 'about')}
+                      className="text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]"
+                      onClick={()=>checkPageAndLoading('about')}
+                    >
+                      {menuText.footerCompany0}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href={getLinkHref(locale, 'contact')}
+                      className="text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]"
+                      onClick={()=>checkPageAndLoading('contact')}
+                    >
+                      {menuText.footerCompany2}
+                    </Link>
+                  </li>
                 </ul>
               </div>
               <div className="mt-10 md:mt-0">
-                <div className="text-sm font-semibold leading-6 text-white"></div>
-                <ul role="list" className="mt-6 space-y-4">
-                  <a
-                    className="text-sm leading-6 footer-link text-white"
-                    target={"_blank"}
-                    href={"https://sticker.show/"}
-                    title={"Free Online AI Sticker Maker & Generator!"}
-                  >
-                    Source by Sticker.Show
-                  </a>
-                </ul>
-              </div>
-            </div>
-            <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <div
-                  className="text-sm font-semibold leading-6 text-white">
+                <div className="text-sm font-semibold leading-6 text-white">
                   {process.env.NEXT_PUBLIC_CHECK_AVAILABLE_TIME == '0' ? '' : menuText.footerSupport}
                 </div>
                 <ul role="list" className="mt-6 space-y-4">
@@ -95,7 +96,7 @@ export default function Footer({
                       <li>
                         <Link
                           href={getLinkHref(locale, 'pricing')}
-                          className="text-sm leading-6 text-gray-300 hover:text-[#2d6ae0]"
+                          className="text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]"
                           onClick={()=>checkPageAndLoading('pricing')}
                         >
                           {menuText.footerSupport0}
@@ -109,7 +110,7 @@ export default function Footer({
                       <li>
                         <a
                           onClick={() => manageSubscribe()}
-                          className="cursor-pointer text-sm leading-6 text-gray-300 hover:text-[#2d6ae0]">
+                          className="cursor-pointer text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]">
                           {menuText.footerSupport1}
                         </a>
                       </li>
@@ -118,13 +119,15 @@ export default function Footer({
                   }
                 </ul>
               </div>
-              <div className="mt-10 md:mt-0">
+            </div>
+            <div className="md:grid md:grid-cols-2 md:gap-8">
+              <div>
                 <div className="text-sm font-semibold leading-6 text-white">{menuText.footerLegal}</div>
                 <ul role="list" className="mt-6 space-y-4">
                   <li>
                     <Link
                       href={getLinkHref(locale, 'privacy-policy')}
-                      className="text-sm leading-6 text-gray-300 hover:text-[#2d6ae0]"
+                      className="text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]"
                       onClick={()=>checkPageAndLoading('privacy-policy')}
                     >
                       {menuText.footerLegal0}
@@ -133,12 +136,34 @@ export default function Footer({
                   <li>
                     <Link
                       href={getLinkHref(locale, 'terms-of-service')}
-                      className="text-sm leading-6 text-gray-300 hover:text-[#2d6ae0]"
+                      className="text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]"
                       onClick={()=>checkPageAndLoading('terms-of-service')}
                     >
                       {menuText.footerLegal1}
                     </Link>
                   </li>
+                  <li>
+                    <Link
+                      href={getLinkHref(locale, 'disclaimer')}
+                      className="text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]"
+                      onClick={()=>checkPageAndLoading('disclaimer')}
+                    >
+                      {menuText.footerLegal2}
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              <div className="mt-10 md:mt-0">
+                <div className="text-sm font-semibold leading-6 text-white"></div>
+                <ul role="list" className="mt-6 space-y-4">
+                  <a
+                    className="text-sm leading-6 footer-link text-white"
+                    target={"_blank"}
+                    href={"https://sticker.show/"}
+                    title={"Free Online AI Sticker Maker & Generator!"}
+                  >
+                    Source by Sticker.Show
+                  </a>
                 </ul>
               </div>
             </div>

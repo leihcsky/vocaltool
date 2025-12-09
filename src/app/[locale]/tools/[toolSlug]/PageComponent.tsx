@@ -98,6 +98,7 @@ const PageComponent = ({
 
   useCustomEffect(() => {
     setShowLoadingModal(false);
+    window.scrollTo(0, 0);
     return () => { }
   }, []);
 

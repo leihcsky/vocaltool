@@ -43,6 +43,7 @@ const PageComponent = ({
 
   useEffect(() => {
     setShowLoadingModal(false);
+    window.scrollTo(0, 0);
   }, [setShowLoadingModal]);
 
   const hasAnyKey = (obj: Record<string, any>) => {

@@ -38,6 +38,7 @@ const PageComponent = ({
 
   useCustomEffect(() => {
     setShowLoadingModal(true);
+    window.scrollTo(0, 0);
     return () => {
     }
   }, []);

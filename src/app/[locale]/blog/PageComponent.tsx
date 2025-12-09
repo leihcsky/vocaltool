@@ -24,6 +24,7 @@ const PageComponent = ({ locale, blogText }) => {
 
   useCustomEffect(() => {
     setShowLoadingModal(false);
+    window.scrollTo(0, 0);
     return () => { }
   }, []);
 

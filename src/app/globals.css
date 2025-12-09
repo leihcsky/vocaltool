@@ -20,7 +20,7 @@
 }
 
 @layer components {
-  /* Markdown Styles */
+  /* Markdown Styles - Default (for light backgrounds) */
   .div-markdown-color h1,
   .div-markdown-color h2,
   .div-markdown-color h3,
@@ -40,6 +40,37 @@
 
   .div-markdown-color p {
     @apply text-neutral-700 leading-relaxed;
+  }
+
+  /* Markdown Styles - Dark background variant */
+  .div-markdown-light h1,
+  .div-markdown-light h2,
+  .div-markdown-light h3,
+  .div-markdown-light h4,
+  .div-markdown-light h5,
+  .div-markdown-light h6 {
+    @apply text-white font-semibold;
+  }
+
+  .div-markdown-light a {
+    @apply text-blue-400 hover:text-blue-300 transition-colors;
+  }
+
+  .div-markdown-light strong {
+    @apply text-gray-50 font-semibold;
+  }
+
+  .div-markdown-light p {
+    @apply text-gray-50 leading-relaxed;
+  }
+
+  .div-markdown-light li {
+    @apply text-gray-50 leading-relaxed;
+  }
+
+  .div-markdown-light ul,
+  .div-markdown-light ol {
+    @apply text-gray-50;
   }
 
   /* Custom Input Styles */
