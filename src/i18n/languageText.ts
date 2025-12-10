@@ -37,6 +37,8 @@ export const getToolsListText = async () => {
     vocalRemoverDesc: tTools('vocalRemoverDesc'),
     audioSplitter: tTools('audioSplitter'),
     audioSplitterDesc: tTools('audioSplitterDesc'),
+    audioCutter: tTools('audioCutter'),
+    audioCutterDesc: tTools('audioCutterDesc'),
     karaokeMaker: tTools('karaokeMaker'),
     karaokeMakerDesc: tTools('karaokeMakerDesc'),
     extractVocals: tTools('extractVocals'),
@@ -60,9 +62,12 @@ export const getToolsPageText = async () => {
 
 export const getToolPageText = async (toolSlug: string) => {
   // Convert tool-slug to ToolSlug format for translation key
-  const toolKey = toolSlug.split('-').map((word, index) =>
-    index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
-  ).join('');
+  const toolKey = toolSlug
+    .split('-')
+    .map((word, index) =>
+      index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1),
+    )
+    .join('');
 
   const tTool = await getTranslations(`Tool.${toolKey}` as any);
 
@@ -75,6 +80,11 @@ export const getToolPageText = async (toolSlug: string) => {
     }
   };
 
+  // Only audio-splitter uses sound source options.
+  // For other tools we avoid even attempting to resolve these keys
+  // to prevent next-intl from logging missing translation warnings.
+  const includeSoundSourceFields = toolSlug === 'audio-splitter';
+
   return {
     title: tTool('title') + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME,
     description: tTool('description'),
@@ -84,18 +94,18 @@ export const getToolPageText = async (toolSlug: string) => {
     uploadDesc: tTool('uploadDesc'),
     processButton: tTool('processButton'),
     usageLimitNotice: safeGet('usageLimitNotice'),
-    // Sound source options (for audio-splitter)
-    soundSourceLabel: safeGet('soundSourceLabel'),
-    soundSourceAll: safeGet('soundSourceAll'),
-    soundSourceAllDesc: safeGet('soundSourceAllDesc'),
-    soundSourceBass: safeGet('soundSourceBass'),
-    soundSourceBassDesc: safeGet('soundSourceBassDesc'),
-    soundSourceDrums: safeGet('soundSourceDrums'),
-    soundSourceDrumsDesc: safeGet('soundSourceDrumsDesc'),
-    soundSourcePiano: safeGet('soundSourcePiano'),
-    soundSourcePianoDesc: safeGet('soundSourcePianoDesc'),
-    soundSourceGuitar: safeGet('soundSourceGuitar'),
-    soundSourceGuitarDesc: safeGet('soundSourceGuitarDesc'),
+    // Sound source options (only for audio-splitter)
+    soundSourceLabel: includeSoundSourceFields ? safeGet('soundSourceLabel') : undefined,
+    soundSourceAll: includeSoundSourceFields ? safeGet('soundSourceAll') : undefined,
+    soundSourceAllDesc: includeSoundSourceFields ? safeGet('soundSourceAllDesc') : undefined,
+    soundSourceBass: includeSoundSourceFields ? safeGet('soundSourceBass') : undefined,
+    soundSourceBassDesc: includeSoundSourceFields ? safeGet('soundSourceBassDesc') : undefined,
+    soundSourceDrums: includeSoundSourceFields ? safeGet('soundSourceDrums') : undefined,
+    soundSourceDrumsDesc: includeSoundSourceFields ? safeGet('soundSourceDrumsDesc') : undefined,
+    soundSourcePiano: includeSoundSourceFields ? safeGet('soundSourcePiano') : undefined,
+    soundSourcePianoDesc: includeSoundSourceFields ? safeGet('soundSourcePianoDesc') : undefined,
+    soundSourceGuitar: includeSoundSourceFields ? safeGet('soundSourceGuitar') : undefined,
+    soundSourceGuitarDesc: includeSoundSourceFields ? safeGet('soundSourceGuitarDesc') : undefined,
     // How to use steps
     howToUseTitle: tTool('howToUseTitle'),
     step1Title: tTool('step1Title'),
@@ -130,7 +140,7 @@ export const getToolPageText = async (toolSlug: string) => {
     faq5A: tTool('faq5A'),
     // SEO content
     seoContent: tTool('seoContent'),
-  }
+  };
 }
 
 export const getCommonText = async () => {

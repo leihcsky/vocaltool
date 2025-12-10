@@ -9,6 +9,7 @@ export const revalidate = 120;
 const AVAILABLE_TOOLS = [
   'vocal-remover',
   'audio-splitter',
+  'audio-cutter',
   'karaoke-maker',
   'extract-vocals',
   'acapella-maker',

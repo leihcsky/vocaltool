@@ -34,6 +34,7 @@ export default function Header({
   const toolsList = [
     { name: toolsListText.vocalRemover, slug: 'vocal-remover', emoji: '🎤' },
     { name: toolsListText.audioSplitter, slug: 'audio-splitter', emoji: '🎚️' },
+    { name: toolsListText.audioCutter, slug: 'audio-cutter', emoji: '✂️' },
     { name: toolsListText.karaokeMaker, slug: 'karaoke-maker', emoji: '🎵' },
     { name: toolsListText.extractVocals, slug: 'extract-vocals', emoji: '🎙️' },
     { name: toolsListText.acapellaMaker, slug: 'acapella-maker', emoji: '🎶' },

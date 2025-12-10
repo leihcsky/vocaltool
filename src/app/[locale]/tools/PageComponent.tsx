@@ -11,7 +11,8 @@ import {
   MicrophoneIcon,
   SpeakerWaveIcon,
   SparklesIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  ScissorsIcon
 } from '@heroicons/react/24/outline';
 
 const PageComponent = ({
@@ -57,6 +58,14 @@ const PageComponent = ({
       icon: SpeakerWaveIcon,
       gradient: 'from-orange-500 to-orange-600',
       emoji: '🎚️'
+    },
+    {
+      name: toolsListText.audioCutter,
+      description: toolsListText.audioCutterDesc,
+      href: getLinkHref(locale, 'tools/audio-cutter'),
+      icon: ScissorsIcon,
+      gradient: 'from-red-500 to-red-600',
+      emoji: '✂️'
     },
     {
       name: toolsListText.karaokeMaker,

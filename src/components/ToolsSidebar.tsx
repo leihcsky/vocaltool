@@ -25,6 +25,12 @@ const ToolsSidebar = ({ locale, currentToolSlug }: ToolsSidebarProps) => {
       gradient: 'from-orange-500 to-orange-600'
     },
     {
+      name: toolsListText.audioCutter,
+      slug: 'audio-cutter',
+      emoji: '✂️',
+      gradient: 'from-red-500 to-red-600'
+    },
+    {
       name: toolsListText.karaokeMaker,
       slug: 'karaoke-maker',
       emoji: '🎵',

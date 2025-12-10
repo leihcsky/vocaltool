@@ -5,6 +5,7 @@ import Footer from "~/components/Footer";
 import ToolsSidebar from "~/components/ToolsSidebar";
 import AudioWaveform from "~/components/AudioWaveform";
 import PricingModal from "~/components/PricingModal";
+import AudioCutterComponent from "./AudioCutterComponent";
 import { useState, useEffect, useRef } from "react";
 import { useCommonContext } from "~/context/common-context";
 import { useFingerprint } from "~/hooks/useFingerprint";
@@ -465,40 +466,45 @@ const PageComponent = ({
                   : 'max-w-4xl mx-auto'
             }>
               <div className="bg-white rounded-2xl shadow-lg border border-neutral-200 p-8 sm:p-12">
-                {/* 使用限制提示 - 仅非 audio-splitter 显示 */}
-                {usageLimit && stage === 'upload' && toolSlug !== 'audio-splitter' && (
-                  <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      {userId
-                        ? `You have ${usageLimit.remaining} of ${usageLimit.limit} daily uploads remaining.`
-                        : (
-                          <>
-                            Free users can upload {usageLimit.remaining} file per day.{' '}
-                            <button
-                              onClick={() => setShowLoginModal(true)}
-                              className="underline font-semibold hover:text-blue-900 transition-colors"
-                            >
-                              Register
-                            </button> for more!
-                          </>
-                        )
-                      }
-                    </p>
-                  </div>
-                )}
+                {/* Audio Cutter - 使用独立组件 */}
+                {toolSlug === 'audio-cutter' ? (
+                  <AudioCutterComponent toolPageText={toolPageText} />
+                ) : (
+                  <>
+                    {/* 使用限制提示 - 仅非 audio-splitter 显示 */}
+                    {usageLimit && stage === 'upload' && toolSlug !== 'audio-splitter' && (
+                      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          {userId
+                            ? `You have ${usageLimit.remaining} of ${usageLimit.limit} daily uploads remaining.`
+                            : (
+                              <>
+                                Free users can upload {usageLimit.remaining} file per day.{' '}
+                                <button
+                                  onClick={() => setShowLoginModal(true)}
+                                  className="underline font-semibold hover:text-blue-900 transition-colors"
+                                >
+                                  Register
+                                </button> for more!
+                              </>
+                            )
+                          }
+                        </p>
+                      </div>
+                    )}
 
-                {/* 错误提示 */}
-                {errorMessage && (
-                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
-                    <p className="text-sm text-red-800">{errorMessage}</p>
-                    <button onClick={() => setErrorMessage('')} className="text-red-600 hover:text-red-800">
-                      <XMarkIcon className="w-5 h-5" />
-                    </button>
-                  </div>
-                )}
+                    {/* 错误提示 */}
+                    {errorMessage && (
+                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+                        <p className="text-sm text-red-800">{errorMessage}</p>
+                        <button onClick={() => setErrorMessage('')} className="text-red-600 hover:text-red-800">
+                          <XMarkIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    )}
 
-                {/* 上传阶段 */}
-                {stage === 'upload' && uploadedFiles.length === 0 && (
+                    {/* 上传阶段 */}
+                    {stage === 'upload' && uploadedFiles.length === 0 && (
                   <div className="space-y-5">
                     {/* 声源选择 - 仅 Audio Splitter 显示 */}
                     {toolSlug === 'audio-splitter' && toolPageText.soundSourceLabel && (
@@ -824,6 +830,8 @@ const PageComponent = ({
                       </button>
                     </div>
                   </div>
+                )}
+                  </>
                 )}
               </div>
             </div>
