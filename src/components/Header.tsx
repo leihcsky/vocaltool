@@ -33,6 +33,7 @@ export default function Header({
   // Tools list for dropdown
   const toolsList = [
     { name: toolsListText.vocalRemover, slug: 'vocal-remover', emoji: '🎤' },
+    { name: toolsListText.audioSplitter, slug: 'audio-splitter', emoji: '🎚️' },
     { name: toolsListText.karaokeMaker, slug: 'karaoke-maker', emoji: '🎵' },
     { name: toolsListText.extractVocals, slug: 'extract-vocals', emoji: '🎙️' },
     { name: toolsListText.acapellaMaker, slug: 'acapella-maker', emoji: '🎶' },

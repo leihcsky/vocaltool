@@ -51,6 +51,14 @@ const PageComponent = ({
       emoji: '🎤'
     },
     {
+      name: toolsListText.audioSplitter,
+      description: toolsListText.audioSplitterDesc,
+      href: getLinkHref(locale, 'tools/audio-splitter'),
+      icon: SpeakerWaveIcon,
+      gradient: 'from-orange-500 to-orange-600',
+      emoji: '🎚️'
+    },
+    {
       name: toolsListText.karaokeMaker,
       description: toolsListText.karaokeMakerDesc,
       href: getLinkHref(locale, 'tools/karaoke-maker'),

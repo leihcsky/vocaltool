@@ -8,6 +8,7 @@ export const revalidate = 120;
 // Define available tools
 const AVAILABLE_TOOLS = [
   'vocal-remover',
+  'audio-splitter',
   'karaoke-maker',
   'extract-vocals',
   'acapella-maker',

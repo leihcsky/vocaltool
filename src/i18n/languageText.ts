@@ -35,6 +35,8 @@ export const getToolsListText = async () => {
   return {
     vocalRemover: tTools('vocalRemover'),
     vocalRemoverDesc: tTools('vocalRemoverDesc'),
+    audioSplitter: tTools('audioSplitter'),
+    audioSplitterDesc: tTools('audioSplitterDesc'),
     karaokeMaker: tTools('karaokeMaker'),
     karaokeMakerDesc: tTools('karaokeMakerDesc'),
     extractVocals: tTools('extractVocals'),
@@ -64,6 +66,15 @@ export const getToolPageText = async (toolSlug: string) => {
 
   const tTool = await getTranslations(`Tool.${toolKey}` as any);
 
+  // Helper function to safely get translation
+  const safeGet = (key: string) => {
+    try {
+      return tTool(key);
+    } catch {
+      return undefined;
+    }
+  };
+
   return {
     title: tTool('title') + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME,
     description: tTool('description'),
@@ -72,6 +83,20 @@ export const getToolPageText = async (toolSlug: string) => {
     uploadTitle: tTool('uploadTitle'),
     uploadDesc: tTool('uploadDesc'),
     processButton: tTool('processButton'),
+    usageLimitNotice: safeGet('usageLimitNotice'),
+    // Sound source options (for audio-splitter)
+    soundSourceLabel: safeGet('soundSourceLabel'),
+    soundSourceAll: safeGet('soundSourceAll'),
+    soundSourceAllDesc: safeGet('soundSourceAllDesc'),
+    soundSourceBass: safeGet('soundSourceBass'),
+    soundSourceBassDesc: safeGet('soundSourceBassDesc'),
+    soundSourceDrums: safeGet('soundSourceDrums'),
+    soundSourceDrumsDesc: safeGet('soundSourceDrumsDesc'),
+    soundSourcePiano: safeGet('soundSourcePiano'),
+    soundSourcePianoDesc: safeGet('soundSourcePianoDesc'),
+    soundSourceGuitar: safeGet('soundSourceGuitar'),
+    soundSourceGuitarDesc: safeGet('soundSourceGuitarDesc'),
+    // How to use steps
     howToUseTitle: tTool('howToUseTitle'),
     step1Title: tTool('step1Title'),
     step1Desc: tTool('step1Desc'),
@@ -79,6 +104,9 @@ export const getToolPageText = async (toolSlug: string) => {
     step2Desc: tTool('step2Desc'),
     step3Title: tTool('step3Title'),
     step3Desc: tTool('step3Desc'),
+    step4Title: safeGet('step4Title'),
+    step4Desc: safeGet('step4Desc'),
+    // Features
     featuresTitle: tTool('featuresTitle'),
     feature1Title: tTool('feature1Title'),
     feature1Desc: tTool('feature1Desc'),
@@ -88,6 +116,7 @@ export const getToolPageText = async (toolSlug: string) => {
     feature3Desc: tTool('feature3Desc'),
     feature4Title: tTool('feature4Title'),
     feature4Desc: tTool('feature4Desc'),
+    // FAQ
     faqTitle: tTool('faqTitle'),
     faq1Q: tTool('faq1Q'),
     faq1A: tTool('faq1A'),
@@ -99,6 +128,7 @@ export const getToolPageText = async (toolSlug: string) => {
     faq4A: tTool('faq4A'),
     faq5Q: tTool('faq5Q'),
     faq5A: tTool('faq5A'),
+    // SEO content
     seoContent: tTool('seoContent'),
   }
 }

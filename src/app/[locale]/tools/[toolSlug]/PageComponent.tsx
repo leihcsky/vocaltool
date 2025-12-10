@@ -66,6 +66,8 @@ const PageComponent = ({
   // 为每个音轨单独管理格式状态 (key: result_type, value: format)
   const [audioFormats, setAudioFormats] = useState<Record<string, 'mp3' | 'wav'>>({});
   const [subscribeStatus, setSubscribeStatus] = useState<string>('');
+  // Audio Splitter 声源选择
+  const [soundSource, setSoundSource] = useState<string>('all');
 
   const { setShowLoadingModal, setShowPricingModal, setShowLoginModal, userData } = useCommonContext();
   const { fingerprint, isLoading: fingerprintLoading } = useFingerprint();
@@ -78,6 +80,7 @@ const PageComponent = ({
   // 工具代码映射
   const toolCodeMap: { [key: string]: string } = {
     'vocal-remover': 'vocal_remover',
+    'audio-splitter': 'audio_splitter',
     'karaoke-maker': 'karaoke_maker',
     'extract-vocals': 'extract_vocals',
     'acapella-maker': 'acapella_maker',
@@ -272,14 +275,23 @@ const PageComponent = ({
       const processPromises = files.map(async (fileInfo, index) => {
         console.log(`[Processing] Processing file ${index + 1}/${files.length}, ID:`, fileInfo.id);
 
+        // 构建请求体，audio-splitter 需要传递 sound_source 参数
+        const requestBody: any = {
+          file_id: fileInfo.id,
+          fingerprint,
+          user_id: userId,
+          tool_code: toolCode
+        };
+
+        // 如果是 audio-splitter 且选择了非 all 的声源，添加 sound_source 参数
+        if (toolSlug === 'audio-splitter' && soundSource !== 'all') {
+          requestBody.sound_source = soundSource;
+        }
+
         const response = await fetch('/api/audio/process', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            file_id: fileInfo.id,
-            fingerprint,
-            user_id: userId
-          })
+          body: JSON.stringify(requestBody)
         });
 
         const result = await response.json();
@@ -445,10 +457,16 @@ const PageComponent = ({
             </div>
 
             {/* Upload Section */}
-            <div className={stage === 'completed' ? 'max-w-6xl mx-auto' : 'max-w-4xl mx-auto'}>
+            <div className={
+              stage === 'completed'
+                ? 'max-w-6xl mx-auto'
+                : toolSlug === 'audio-splitter'
+                  ? 'max-w-5xl mx-auto'
+                  : 'max-w-4xl mx-auto'
+            }>
               <div className="bg-white rounded-2xl shadow-lg border border-neutral-200 p-8 sm:p-12">
-                {/* 使用限制提示 */}
-                {usageLimit && stage === 'upload' && (
+                {/* 使用限制提示 - 仅非 audio-splitter 显示 */}
+                {usageLimit && stage === 'upload' && toolSlug !== 'audio-splitter' && (
                   <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-800">
                       {userId
@@ -481,39 +499,111 @@ const PageComponent = ({
 
                 {/* 上传阶段 */}
                 {stage === 'upload' && uploadedFiles.length === 0 && (
-                  <div className="text-center">
-                    <label htmlFor="file-upload" className="cursor-pointer block">
-                      <div className="border-2 border-dashed border-neutral-300 rounded-xl p-12 hover:border-brand-500 transition-colors">
-                        <CloudArrowUpIcon className="w-16 h-16 mx-auto text-neutral-400 mb-4" />
-                        <p className="text-lg font-semibold text-neutral-900 mb-2">
-                          {toolPageText.uploadTitle || 'Upload your audio file'}
-                        </p>
-                        <p className="text-neutral-600 mb-4">
-                          {toolPageText.uploadDesc || 'Click to browse or drag and drop'}
-                        </p>
-                        <p className="text-sm text-neutral-500">
-                          Supports MP3, WAV, FLAC (Max 100MB)
-                          {userId && ' • Upload up to 3 files at once'}
-                        </p>
-
-                        {/* 使用限制提示 */}
-                        {toolPageText.usageLimitNotice && (
-                          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <p className="text-sm text-blue-800">
-                              ℹ️ {toolPageText.usageLimitNotice}
+                  <div className="space-y-5">
+                    {/* 声源选择 - 仅 Audio Splitter 显示 */}
+                    {toolSlug === 'audio-splitter' && toolPageText.soundSourceLabel && (
+                      <div className="bg-white border border-neutral-200 rounded-xl p-5">
+                        <h3 className="text-base font-semibold text-neutral-900 mb-3">
+                          {toolPageText.soundSourceLabel}
+                        </h3>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                          {/* All Stems */}
+                          <button
+                            onClick={() => setSoundSource('all')}
+                            className={`p-3 rounded-lg border-2 transition-all text-center ${
+                              soundSource === 'all'
+                                ? 'border-brand-500 bg-brand-500 text-white shadow-md'
+                                : 'border-neutral-200 hover:border-brand-300 bg-white'
+                            }`}
+                          >
+                            <p className={`text-sm font-semibold ${soundSource === 'all' ? 'text-white' : 'text-neutral-900'}`}>
+                              {toolPageText.soundSourceAll?.replace(' (4 tracks)', '') || 'All Stems'}
                             </p>
-                          </div>
-                        )}
+                          </button>
+
+                          {/* Bass Only */}
+                          <button
+                            onClick={() => setSoundSource('bass')}
+                            className={`p-3 rounded-lg border-2 transition-all text-center ${
+                              soundSource === 'bass'
+                                ? 'border-brand-500 bg-brand-500 text-white shadow-md'
+                                : 'border-neutral-200 hover:border-brand-300 bg-white'
+                            }`}
+                          >
+                            <p className={`text-sm font-semibold ${soundSource === 'bass' ? 'text-white' : 'text-neutral-900'}`}>
+                              {toolPageText.soundSourceBass?.replace(' Only', '') || 'Bass'}
+                            </p>
+                          </button>
+
+                          {/* Drums Only */}
+                          <button
+                            onClick={() => setSoundSource('drums')}
+                            className={`p-3 rounded-lg border-2 transition-all text-center ${
+                              soundSource === 'drums'
+                                ? 'border-brand-500 bg-brand-500 text-white shadow-md'
+                                : 'border-neutral-200 hover:border-brand-300 bg-white'
+                            }`}
+                          >
+                            <p className={`text-sm font-semibold ${soundSource === 'drums' ? 'text-white' : 'text-neutral-900'}`}>
+                              {toolPageText.soundSourceDrums?.replace(' Only', '') || 'Drums'}
+                            </p>
+                          </button>
+
+                          {/* Piano Only */}
+                          <button
+                            onClick={() => setSoundSource('piano')}
+                            className={`p-3 rounded-lg border-2 transition-all text-center ${
+                              soundSource === 'piano'
+                                ? 'border-brand-500 bg-brand-500 text-white shadow-md'
+                                : 'border-neutral-200 hover:border-brand-300 bg-white'
+                            }`}
+                          >
+                            <p className={`text-sm font-semibold ${soundSource === 'piano' ? 'text-white' : 'text-neutral-900'}`}>
+                              {toolPageText.soundSourcePiano?.replace(' Only', '') || 'Piano'}
+                            </p>
+                          </button>
+
+                          {/* Guitar Only */}
+                          <button
+                            onClick={() => setSoundSource('guitar')}
+                            className={`p-3 rounded-lg border-2 transition-all text-center ${
+                              soundSource === 'guitar'
+                                ? 'border-brand-500 bg-brand-500 text-white shadow-md'
+                                : 'border-neutral-200 hover:border-brand-300 bg-white'
+                            }`}
+                          >
+                            <p className={`text-sm font-semibold ${soundSource === 'guitar' ? 'text-white' : 'text-neutral-900'}`}>
+                              {toolPageText.soundSourceGuitar?.replace(' Only', '') || 'Guitar'}
+                            </p>
+                          </button>
+                        </div>
                       </div>
-                      <input
-                        id="file-upload"
-                        type="file"
-                        className="hidden"
-                        accept="audio/*,.mp3,.wav,.flac"
-                        multiple={!!userId}
-                        onChange={handleFileSelect}
-                      />
-                    </label>
+                    )}
+
+                    {/* 上传区域 */}
+                    <div className="text-center">
+                      <label htmlFor="file-upload" className="cursor-pointer block">
+                        <div className="border-2 border-dashed border-neutral-300 rounded-xl p-8 hover:border-brand-500 transition-colors bg-neutral-50">
+                          <CloudArrowUpIcon className="w-12 h-12 mx-auto text-neutral-400 mb-3" />
+                          <p className="text-sm text-neutral-600 mb-4">
+                            Supports MP3, WAV, FLAC • Max 100MB{userId && ' • Upload up to 3 files'}
+                          </p>
+                          <div className="inline-block">
+                            <div className="px-8 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold rounded-lg hover:from-brand-600 hover:to-brand-700 transition-all shadow-md hover:shadow-lg">
+                              Choose Audio File{userId && 's'}
+                            </div>
+                          </div>
+                        </div>
+                        <input
+                          id="file-upload"
+                          type="file"
+                          className="hidden"
+                          accept="audio/*,.mp3,.wav,.flac"
+                          multiple={!!userId}
+                          onChange={handleFileSelect}
+                        />
+                      </label>
+                    </div>
                   </div>
                 )}
 
@@ -745,7 +835,7 @@ const PageComponent = ({
             <h2 className="text-3xl font-bold text-neutral-900 mb-8 text-center">
               {toolPageText.howToUseTitle || 'How to Use'}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className={`grid grid-cols-1 gap-8 ${toolPageText.step4Title ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-100 text-brand-600 font-bold text-xl mb-4">
                   1
@@ -779,6 +869,19 @@ const PageComponent = ({
                   {toolPageText.step3Desc || 'Get your processed audio file'}
                 </p>
               </div>
+              {toolPageText.step4Title && (
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-100 text-brand-600 font-bold text-xl mb-4">
+                    4
+                  </div>
+                  <h3 className="font-semibold text-neutral-900 mb-2">
+                    {toolPageText.step4Title}
+                  </h3>
+                  <p className="text-neutral-600 text-sm">
+                    {toolPageText.step4Desc}
+                  </p>
+                </div>
+              )}
               </div>
             </div>
           </section>

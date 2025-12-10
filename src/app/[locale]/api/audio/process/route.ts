@@ -35,7 +35,7 @@ const MAX_POLL_COUNT = 180; // 最多轮询 1 小时
 export async function POST(req: Request) {
   try {
     const json = await req.json();
-    const { file_id, fingerprint, user_id } = json;
+    const { file_id, fingerprint, user_id, sound_source, tool_code } = json;
 
     // 验证参数
     if (!file_id) {
@@ -74,16 +74,46 @@ export async function POST(req: Request) {
         contentType: fileInfo.mime_type,
       });
 
-      // 提交任务（使用队列模式）
-      const submitResponse = await fetch(
-        `${demucsUrl}/separate?use_queue=true&model=htdemucs&stems=2stems&mp3=false`,
-        {
-          method: 'POST',
-          body: formData,
-          headers: formData.getHeaders(),
-          timeout: 60000, // 60 秒超时
+      // 根据 sound_source 参数确定 model 和 stems
+      let model = 'htdemucs';
+      let stems = '4stems';
+      let soundSourceParam = '';
+
+      if (sound_source) {
+        // 如果选择了 piano 或 guitar，使用 htdemucs_6s 模型和 6stems
+        if (sound_source === 'piano' || sound_source === 'guitar') {
+          model = 'htdemucs_6s';
+          stems = '6stems';
+          soundSourceParam = `&sound_source=${sound_source}`;
         }
-      );
+        // 如果选择了 bass 或 drums，使用 2stems
+        else if (sound_source === 'bass' || sound_source === 'drums') {
+          stems = '2stems';
+          soundSourceParam = `&sound_source=${sound_source}`;
+        }
+        // vocals 不在 audio-splitter 中使用，但保留兼容性
+        else if (sound_source === 'vocals') {
+          stems = '2stems';
+          soundSourceParam = `&sound_source=${sound_source}`;
+        }
+      } else {
+        // 默认行为：vocal-remover 使用 2stems
+        // audio-splitter 选择 all 时使用 4stems
+        if (tool_code === 'vocal_remover') {
+          stems = '2stems';
+        }
+      }
+
+      // 提交任务（使用队列模式）
+      const submitUrl = `${demucsUrl}/separate?use_queue=true&model=${model}&stems=${stems}&mp3=false${soundSourceParam}`;
+      console.log(`[Process] Submitting to Demucs: ${submitUrl}`);
+
+      const submitResponse = await fetch(submitUrl, {
+        method: 'POST',
+        body: formData,
+        headers: formData.getHeaders(),
+        timeout: 60000, // 60 秒超时
+      });
 
       if (!submitResponse.ok) {
         throw new Error(`Failed to submit task: ${submitResponse.statusText}`);

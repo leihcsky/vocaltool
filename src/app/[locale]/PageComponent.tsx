@@ -94,18 +94,18 @@ const PageComponent = ({
       gradient: 'from-brand-500 to-brand-600',
     },
     {
+      name: toolsListText.audioSplitter,
+      description: toolsListText.audioSplitterDesc,
+      href: getLinkHref(locale, 'tools/audio-splitter'),
+      icon: '🎚️',
+      gradient: 'from-orange-500 to-orange-600',
+    },
+    {
       name: toolsListText.karaokeMaker,
       description: toolsListText.karaokeMakerDesc,
       href: getLinkHref(locale, 'tools/karaoke-maker'),
       icon: '🎵',
       gradient: 'from-accent-500 to-accent-600',
-    },
-    {
-      name: toolsListText.extractVocals,
-      description: toolsListText.extractVocalsDesc,
-      href: getLinkHref(locale, 'tools/extract-vocals'),
-      icon: '🎧',
-      gradient: 'from-brand-400 to-brand-500',
     },
   ];
 
