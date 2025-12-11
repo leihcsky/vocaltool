@@ -26,6 +26,8 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
   const [overlayCursorLeft, setOverlayCursorLeft] = useState(0);
   const [overlayProgressLeft, setOverlayProgressLeft] = useState(0);
   const [overlayProgressWidth, setOverlayProgressWidth] = useState(0);
+  const [labelLeft, setLabelLeft] = useState(0);
+  const [labelTop, setLabelTop] = useState(0);
   const [exportFormat, setExportFormat] = useState<'mp3' | 'wav'>('wav');
   const [errorMessage, setErrorMessage] = useState('');
   const [isMounted, setIsMounted] = useState(false);
@@ -56,6 +58,9 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
     const clampedLeft = Math.max(0, Math.min(visibleX, client));
     setOverlayCursorLeft(clampedLeft);
     container.style.setProperty('--cursor-x', `${clampedLeft}px`);
+    const rect = container.getBoundingClientRect();
+    setLabelLeft(rect.left + clampedLeft);
+    setLabelTop(rect.top - 99);
 
     const region = currentRegionRef.current;
     if (region) {
@@ -109,7 +114,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
       container: waveformRef.current,
       waveColor: '#9ca3af',
       progressColor: '#9ca3af',
-      cursorColor: '#e90e0eff',
+      cursorColor: '#708ad2ff',
       barWidth: 2,
       barRadius: 2,
       cursorWidth: 2,
@@ -198,17 +203,58 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
       if (waveformRef.current) {
         const label = `"${formatTime(time)}"`;
         waveformRef.current.style.setProperty('--cursor-time', label);
-        // 确保光标在播放时可见
+        // 确保光标在播放时可见，并设置 position: relative 以支持 ::before 伪元素
         if (isPlayingRef.current) {
           const cursor = waveformRef.current.querySelector('[part="cursor"]') as HTMLElement;
           if (cursor) {
             cursor.style.opacity = '1';
             cursor.style.display = 'block';
             cursor.style.visibility = 'visible';
+            // 动态设置 position: relative 以支持 ::before 伪元素显示时间
+            const computedStyle = window.getComputedStyle(cursor);
+            if (computedStyle.position === 'static' || !computedStyle.position) {
+              cursor.style.position = 'relative';
+            }
+            // 确保光标本身仍然可见（设置明确的宽度和高度）
+            if (!cursor.style.width || cursor.style.width === '0px') {
+              cursor.style.width = '2px';
+            }
+            if (!cursor.style.height || cursor.style.height === '0px') {
+              cursor.style.height = '100%';
+            }
+          }
+        }
+        // 更新时间标签位置（使用独立元素）
+        const cursorEl = waveformRef.current.querySelector('[part="cursor"]') as HTMLElement | null;
+        if (cursorEl && isPlayingRef.current) {
+          const rect = cursorEl.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            setLabelLeft(rect.left + rect.width / 2);
+            setLabelTop(rect.top - 8);
           }
         }
       }
       updateOverlayPositions(time);
+
+      // 模拟 Hover 插件在光标位置显示时间标签
+      if (waveformRef.current) {
+        const container = waveformRef.current as HTMLDivElement;
+        const waveEl = container.querySelector('wave') as HTMLElement | null;
+        if (waveEl) {
+          const rect = waveEl.getBoundingClientRect();
+          const total = (waveEl as any).scrollWidth ?? container.scrollWidth ?? container.clientWidth;
+          const scrollLeft = (waveEl as any).scrollLeft ?? container.scrollLeft ?? 0;
+          const client = container.clientWidth || ((waveEl as any).clientWidth ?? total);
+          const ratio = Math.max(0, Math.min(1, time / duration));
+          const absoluteX = ratio * total;
+          const visibleX = absoluteX - scrollLeft;
+          const clampedLeft = Math.max(0, Math.min(visibleX, client));
+          const clientX = rect.left + clampedLeft;
+          const clientY = rect.top + rect.height / 2;
+          const ev = new MouseEvent('mousemove', { clientX, clientY, bubbles: true, cancelable: false });
+          waveEl.dispatchEvent(ev);
+        }
+      }
       
       const region = currentRegionRef.current;
       if (region && isPlayingRef.current) {
@@ -675,34 +721,17 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
         #waveform ::part(cursor) { 
           z-index: 100 !important; 
           opacity: 1 !important; 
-          background: #0ea5e9 !important; 
-          box-shadow: 0 0 0 1px rgba(255,255,255,0.9) !important; 
           display: block !important;
           visibility: visible !important;
         }
-        /* 播放时强制显示光标 */
+        /* 播放时强制显示光标，并支持 ::before 伪元素 */
         #waveform.is-playing ::part(cursor) {
           opacity: 1 !important;
           display: block !important;
           visibility: visible !important;
         }
-      #waveform ::part(cursor)::before { display: none !important; }
-
-      #waveform::after {
-          content: var(--cursor-time);
-          position: absolute;
-          top: -99px !important;
-          left: var(--cursor-x);
-          transform: translateX(-50%);
-          background: rgba(0,0,0,0.7);
-          color: #fff;
-          font-size: 12px;
-          line-height: 1;
-          padding: 2px 6px;
-          border-radius: 4px;
-          white-space: nowrap;
-          pointer-events: none;
-        }
+        /* 不使用光标伪元素显示时间，改用容器伪元素，避免定位相斥 */
+        #waveform ::part(cursor)::before { display: none !important; }
         
         #waveform ::part(region-handle-left),
         #waveform ::part(handle-left),
@@ -831,7 +860,28 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
               className="mb-3 bg-neutral-50 rounded-lg border border-neutral-200 p-2"
               style={{ minHeight: '120px', width: '100%', position: 'relative' }}
             >
-              
+              {audioFile && (
+                <div
+                  id="cursor-time-label"
+                  className="pointer-events-none"
+                  style={{
+                    position: 'absolute',
+                    left: `${overlayCursorLeft}px`,
+                    top: 0,
+                    transform: 'translate(-50%, -100%)',
+                    background: 'rgba(0,0,0,0.7)',
+                    color: '#fff',
+                    fontSize: 12,
+                    lineHeight: 1,
+                    padding: '2px 6px',
+                    borderRadius: 4,
+                    whiteSpace: 'nowrap',
+                    zIndex: 1000
+                  }}
+                >
+                  {formatTime(currentTime)}
+                </div>
+              )}
             </div>
 
             {isLoading && (
