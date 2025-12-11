@@ -56,11 +56,11 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
     const wavesurfer = WaveSurfer.create({
       container: waveformRef.current,
       waveColor: '#9ca3af',
-      progressColor: '#0ea5e9', // 蓝色进度
+      progressColor: '#9ca3af',
       cursorColor: '#0ea5e9',
       barWidth: 2,
       barRadius: 2,
-      cursorWidth: 1,
+      cursorWidth: 2,
       height: 100,
       barGap: 1,
       normalize: true,
@@ -532,13 +532,13 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
           overflow: visible !important;
         }
         
-        /* Region 手柄样式 - 提高优先级 */
-        div[part~="region-handle"][part~="region-handle-left"],
-        div[part*="region-handle-left"] {
+        #waveform ::part(region-handle-left),
+        #waveform ::part(handle-left),
+        #waveform ::part(region-handle) {
           position: absolute !important;
-          width: 12px !important;
-          min-width: 12px !important;
-          max-width: 12px !important;
+          width: 8px !important;
+          min-width: 8px !important;
+          max-width: 8px !important;
           height: 100% !important;
           background: linear-gradient(180deg, #60d5ff 0%, #0ea5e9 50%, #0284c7 100%) !important;
           border: 2px solid #0369a1 !important;
@@ -551,12 +551,12 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
           z-index: 10 !important;
         }
         
-        div[part~="region-handle"][part~="region-handle-right"],
-        div[part*="region-handle-right"] {
+        #waveform ::part(region-handle-right),
+        #waveform ::part(handle-right) {
           position: absolute !important;
-          width: 12px !important;
-          min-width: 12px !important;
-          max-width: 12px !important;
+          width: 8px !important;
+          min-width: 8px !important;
+          max-width: 8px !important;
           height: 100% !important;
           background: linear-gradient(180deg, #60d5ff 0%, #0ea5e9 50%, #0284c7 100%) !important;
           border: 2px solid #0369a1 !important;
@@ -569,9 +569,8 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
           z-index: 10 !important;
         }
         
-        /* 手柄上的3个小圆点 */
-        div[part*="region-handle-left"]::before,
-        div[part*="region-handle-right"]::before {
+        #waveform ::part(region-handle-left)::before,
+        #waveform ::part(region-handle-right)::before {
           content: '';
           position: absolute;
           left: 50%;
@@ -589,9 +588,8 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
             0 21px 2px 0 rgba(0, 0, 0, 0.3);
         }
         
-        /* Hover 效果 */
-        div[part*="region-handle-left"]:hover,
-        div[part*="region-handle-right"]:hover {
+        #waveform ::part(region-handle-left):hover,
+        #waveform ::part(region-handle-right):hover {
           background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #075985 100%) !important;
           box-shadow: 
             0 3px 12px rgba(14, 165, 233, 0.8),
