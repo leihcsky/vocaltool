@@ -67,38 +67,6 @@ const PageComponent = ({
       gradient: 'from-red-500 to-red-600',
       emoji: '✂️'
     },
-    {
-      name: toolsListText.karaokeMaker,
-      description: toolsListText.karaokeMakerDesc,
-      href: getLinkHref(locale, 'tools/karaoke-maker'),
-      icon: MusicalNoteIcon,
-      gradient: 'from-accent-500 to-accent-600',
-      emoji: '🎵'
-    },
-    {
-      name: toolsListText.extractVocals,
-      description: toolsListText.extractVocalsDesc,
-      href: getLinkHref(locale, 'tools/extract-vocals'),
-      icon: SpeakerWaveIcon,
-      gradient: 'from-purple-500 to-purple-600',
-      emoji: '🎧'
-    },
-    {
-      name: toolsListText.acapellaMaker,
-      description: toolsListText.acapellaMakerDesc,
-      href: getLinkHref(locale, 'tools/acapella-maker'),
-      icon: SparklesIcon,
-      gradient: 'from-pink-500 to-pink-600',
-      emoji: '✨'
-    },
-    {
-      name: toolsListText.noiseReducer,
-      description: toolsListText.noiseReducerDesc,
-      href: getLinkHref(locale, 'tools/noise-reducer'),
-      icon: SpeakerWaveIcon,
-      gradient: 'from-green-500 to-green-600',
-      emoji: '🔇'
-    },
   ];
 
   return (

@@ -84,6 +84,11 @@ export const getToolPageText = async (toolSlug: string) => {
   // For other tools we avoid even attempting to resolve these keys
   // to prevent next-intl from logging missing translation warnings.
   const includeSoundSourceFields = toolSlug === 'audio-splitter';
+  
+  // Only audio-splitter and audio-cutter have step4
+  // For other tools we avoid even attempting to resolve these keys
+  // to prevent next-intl from logging missing translation warnings.
+  const includeStep4Fields = toolSlug === 'audio-splitter' || toolSlug === 'audio-cutter';
 
   return {
     title: tTool('title') + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME,
@@ -114,8 +119,8 @@ export const getToolPageText = async (toolSlug: string) => {
     step2Desc: tTool('step2Desc'),
     step3Title: tTool('step3Title'),
     step3Desc: tTool('step3Desc'),
-    step4Title: safeGet('step4Title'),
-    step4Desc: safeGet('step4Desc'),
+    step4Title: includeStep4Fields ? safeGet('step4Title') : undefined,
+    step4Desc: includeStep4Fields ? safeGet('step4Desc') : undefined,
     // Features
     featuresTitle: tTool('featuresTitle'),
     feature1Title: tTool('feature1Title'),

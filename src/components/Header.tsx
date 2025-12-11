@@ -35,10 +35,6 @@ export default function Header({
     { name: toolsListText.vocalRemover, slug: 'vocal-remover', emoji: '🎤' },
     { name: toolsListText.audioSplitter, slug: 'audio-splitter', emoji: '🎚️' },
     { name: toolsListText.audioCutter, slug: 'audio-cutter', emoji: '✂️' },
-    { name: toolsListText.karaokeMaker, slug: 'karaoke-maker', emoji: '🎵' },
-    { name: toolsListText.extractVocals, slug: 'extract-vocals', emoji: '🎙️' },
-    { name: toolsListText.acapellaMaker, slug: 'acapella-maker', emoji: '🎶' },
-    { name: toolsListText.noiseReducer, slug: 'noise-reducer', emoji: '🔇' },
   ];
 
   const [pageResult] = useState(getLinkHref(locale, page))

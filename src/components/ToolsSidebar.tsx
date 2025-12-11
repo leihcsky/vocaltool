@@ -30,30 +30,6 @@ const ToolsSidebar = ({ locale, currentToolSlug }: ToolsSidebarProps) => {
       emoji: '✂️',
       gradient: 'from-red-500 to-red-600'
     },
-    {
-      name: toolsListText.karaokeMaker,
-      slug: 'karaoke-maker',
-      emoji: '🎵',
-      gradient: 'from-purple-500 to-purple-600'
-    },
-    {
-      name: toolsListText.extractVocals,
-      slug: 'extract-vocals',
-      emoji: '🎙️',
-      gradient: 'from-cyan-500 to-cyan-600'
-    },
-    {
-      name: toolsListText.acapellaMaker,
-      slug: 'acapella-maker',
-      emoji: '🎶',
-      gradient: 'from-pink-500 to-pink-600'
-    },
-    {
-      name: toolsListText.noiseReducer,
-      slug: 'noise-reducer',
-      emoji: '🔇',
-      gradient: 'from-green-500 to-green-600'
-    },
   ];
 
   const handleToolClick = (slug: string) => {
@@ -95,18 +71,6 @@ const ToolsSidebar = ({ locale, currentToolSlug }: ToolsSidebarProps) => {
             );
           })}
         </nav>
-
-        {/* All Tools Link */}
-        <div className="mt-6 pt-6 border-t border-neutral-200">
-          <Link
-            href={getLinkHref(locale, 'tools')}
-            onClick={() => setShowLoadingModal(true)}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-brand-600 hover:bg-brand-50 transition-colors"
-          >
-            <span>View All Tools</span>
-            <span>→</span>
-          </Link>
-        </div>
       </div>
     </aside>
   );

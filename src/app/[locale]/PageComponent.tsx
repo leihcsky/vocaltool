@@ -101,11 +101,11 @@ const PageComponent = ({
       gradient: 'from-orange-500 to-orange-600',
     },
     {
-      name: toolsListText.karaokeMaker,
-      description: toolsListText.karaokeMakerDesc,
-      href: getLinkHref(locale, 'tools/karaoke-maker'),
-      icon: '🎵',
-      gradient: 'from-accent-500 to-accent-600',
+      name: toolsListText.audioCutter,
+      description: toolsListText.audioCutterDesc,
+      href: getLinkHref(locale, 'tools/audio-cutter'),
+      icon: '✂️',
+      gradient: 'from-red-500 to-red-600',
     },
   ];
 

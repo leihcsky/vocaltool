@@ -1,6 +1,6 @@
 import PageComponent from "./PageComponent";
 import { setRequestLocale } from 'next-intl/server';
-import { getToolPageText } from "~/i18n/languageText";
+import { getToolPageText, getToolsListText } from "~/i18n/languageText";
 import { notFound } from "next/navigation";
 
 export const revalidate = 120;
@@ -30,12 +30,14 @@ export default async function ToolPage({
   }
 
   const toolPageText = await getToolPageText(toolSlug);
+  const toolsListText = await getToolsListText();
 
   return (
     <PageComponent
       locale={locale}
       toolSlug={toolSlug}
       toolPageText={toolPageText}
+      toolsListText={toolsListText}
     />
   )
 }

@@ -5,6 +5,7 @@ import Footer from "~/components/Footer";
 import ToolsSidebar from "~/components/ToolsSidebar";
 import AudioWaveform from "~/components/AudioWaveform";
 import PricingModal from "~/components/PricingModal";
+import ToolInternalLinks from "~/components/ToolInternalLinks";
 import AudioCutterComponent from "./AudioCutterComponent";
 import { useState, useEffect, useRef } from "react";
 import { useCommonContext } from "~/context/common-context";
@@ -51,10 +52,12 @@ const PageComponent = ({
   locale,
   toolSlug,
   toolPageText,
+  toolsListText,
 }: {
   locale: string;
   toolSlug: string;
   toolPageText: any;
+  toolsListText: any;
 }) => {
   // 状态管理
   const [stage, setStage] = useState<ProcessingStage>('upload');
@@ -77,6 +80,45 @@ const PageComponent = ({
   // 获取用户ID
   // @ts-ignore
   const userId = userData?.user_id || session?.user?.user_id || null;
+
+  // 定义内部链接配置
+  const getInternalLinks = () => {
+    const tools = {
+      'vocal-remover': {
+        slug: 'vocal-remover',
+        name: toolsListText.vocalRemover,
+        description: toolsListText.vocalRemoverDesc,
+        emoji: '🎤'
+      },
+      'audio-splitter': {
+        slug: 'audio-splitter',
+        name: toolsListText.audioSplitter,
+        description: toolsListText.audioSplitterDesc,
+        emoji: '🎚️'
+      },
+      'audio-cutter': {
+        slug: 'audio-cutter',
+        name: toolsListText.audioCutter,
+        description: toolsListText.audioCutterDesc,
+        emoji: '✂️'
+      }
+    };
+
+    // 根据当前工具返回相关链接
+    switch (toolSlug) {
+      case 'vocal-remover':
+        // Vocal Remover → Audio Cutter (分离后可以剪辑)
+        return [tools['audio-cutter']];
+      case 'audio-splitter':
+        // Audio Splitter → Vocal Remover (不提供人声分离，可以链接到vocal remover)
+        return [tools['vocal-remover']];
+      case 'audio-cutter':
+        // Audio Cutter → Vocal Remover 和 Audio Splitter (剪辑前可以先分离)
+        return [tools['vocal-remover'], tools['audio-splitter']];
+      default:
+        return [];
+    }
+  };
 
   // 工具代码映射
   const toolCodeMap: { [key: string]: string } = {
@@ -843,7 +885,7 @@ const PageComponent = ({
             <h2 className="text-3xl font-bold text-neutral-900 mb-8 text-center">
               {toolPageText.howToUseTitle || 'How to Use'}
             </h2>
-            <div className={`grid grid-cols-1 gap-8 ${toolPageText.step4Title ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
+            <div className={`grid grid-cols-1 gap-8 ${toolPageText.step4Title && toolPageText.step4Desc ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-100 text-brand-600 font-bold text-xl mb-4">
                   1
@@ -877,7 +919,7 @@ const PageComponent = ({
                   {toolPageText.step3Desc || 'Get your processed audio file'}
                 </p>
               </div>
-              {toolPageText.step4Title && (
+              {toolPageText.step4Title && toolPageText.step4Desc && (
                 <div className="text-center">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-100 text-brand-600 font-bold text-xl mb-4">
                     4
@@ -952,6 +994,16 @@ const PageComponent = ({
               </div>
             </div>
           </section>
+
+          {/* Internal Links Section */}
+          {getInternalLinks().length > 0 && (
+            <ToolInternalLinks
+              locale={locale}
+              currentToolSlug={toolSlug}
+              links={getInternalLinks()}
+              title={toolPageText.relatedToolsTitle || "Related Tools"}
+            />
+          )}
 
           {/* SEO Content Section */}
           {toolPageText.seoContent && (
