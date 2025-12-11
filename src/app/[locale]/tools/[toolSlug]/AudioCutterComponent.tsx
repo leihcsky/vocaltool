@@ -23,6 +23,9 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [selectedRegion, setSelectedRegion] = useState<{ start: number; end: number } | null>(null);
+  const [overlayCursorLeft, setOverlayCursorLeft] = useState(0);
+  const [overlayProgressLeft, setOverlayProgressLeft] = useState(0);
+  const [overlayProgressWidth, setOverlayProgressWidth] = useState(0);
   const [exportFormat, setExportFormat] = useState<'mp3' | 'wav'>('wav');
   const [errorMessage, setErrorMessage] = useState('');
   const [isMounted, setIsMounted] = useState(false);
@@ -38,6 +41,35 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
   const currentRegionRef = useRef<any>(null);
   const isPlayingRef = useRef(false);
   const playProgressRegionRef = useRef<any>(null);
+  const playProgressLastEndRef = useRef<number>(0);
+
+  const updateOverlayPositions = (time: number) => {
+    if (!waveformRef.current || duration <= 0) return;
+    const container = waveformRef.current as HTMLDivElement;
+    const waveEl = container.querySelector('wave') as HTMLElement | null;
+    const total = waveEl?.scrollWidth ?? container.scrollWidth ?? container.clientWidth;
+    const scrollLeft = waveEl?.scrollLeft ?? container.scrollLeft ?? 0;
+    const client = container.clientWidth || (waveEl?.clientWidth ?? total);
+    const ratio = Math.max(0, Math.min(1, time / duration));
+    const absoluteX = ratio * total;
+    const visibleX = absoluteX - scrollLeft;
+    const clampedLeft = Math.max(0, Math.min(visibleX, client));
+    setOverlayCursorLeft(clampedLeft);
+    container.style.setProperty('--cursor-x', `${clampedLeft}px`);
+
+    const region = currentRegionRef.current;
+    if (region) {
+      const startRatio = Math.max(0, Math.min(1, region.start / duration));
+      const startAbsX = startRatio * total;
+      const startVisX = startAbsX - scrollLeft;
+      const width = Math.max(0, visibleX - startVisX);
+      setOverlayProgressLeft(Math.max(0, Math.min(startVisX, client)));
+      setOverlayProgressWidth(Math.max(0, Math.min(width, client)));
+    } else {
+      setOverlayProgressLeft(0);
+      setOverlayProgressWidth(0);
+    }
+  };
 
   // Ensure component is mounted (client-side only)
   useEffect(() => {
@@ -77,10 +109,10 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
       container: waveformRef.current,
       waveColor: '#9ca3af',
       progressColor: '#9ca3af',
-      cursorColor: '#0ea5e9',
+      cursorColor: '#e90e0eff',
       barWidth: 2,
       barRadius: 2,
-      cursorWidth: 3,
+      cursorWidth: 2,
       height: 100,
       barGap: 1,
       normalize: true,
@@ -89,6 +121,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
       autoScroll: true,
       autoCenter: true,
       dragToSeek: false, // 禁用点击跳转，只在选区内播放
+      interact: true, // 启用交互，确保光标可见
       plugins: [regions, hover],
     });
 
@@ -122,12 +155,14 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
           id: 'play-progress',
           start: region.start,
           end: region.start,
-          color: 'rgba(14, 165, 233, 0.35)',
+          color: 'transparent',
           drag: false,
           resize: false,
         });
         playProgressRegionRef.current = progressOverlay;
+        playProgressLastEndRef.current = region.start;
       }
+      updateOverlayPositions(0);
     });
 
     wavesurfer.on('error', (error) => {
@@ -136,7 +171,18 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
       setIsLoading(false);
     });
 
-    wavesurfer.on('play', () => setIsPlaying(true));
+    wavesurfer.on('play', () => {
+      setIsPlaying(true);
+      isPlayingRef.current = true;
+      if (waveformRef.current) {
+        const cursor = waveformRef.current.querySelector('[part="cursor"]') as HTMLElement;
+        if (cursor) {
+          cursor.style.opacity = '1';
+          cursor.style.display = 'block';
+          cursor.style.visibility = 'visible';
+        }
+      }
+    });
     wavesurfer.on('pause', () => {
       setIsPlaying(false);
       isPlayingRef.current = false;
@@ -152,24 +198,32 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
       if (waveformRef.current) {
         const label = `"${formatTime(time)}"`;
         waveformRef.current.style.setProperty('--cursor-time', label);
+        // 确保光标在播放时可见
+        if (isPlayingRef.current) {
+          const cursor = waveformRef.current.querySelector('[part="cursor"]') as HTMLElement;
+          if (cursor) {
+            cursor.style.opacity = '1';
+            cursor.style.display = 'block';
+            cursor.style.visibility = 'visible';
+          }
+        }
       }
+      updateOverlayPositions(time);
       
       const region = currentRegionRef.current;
       if (region && isPlayingRef.current) {
         const start = region.start;
         const end = region.end;
         const t = Math.min(Math.max(time, start), end);
-        if (playProgressRegionRef.current && regionsPluginRef.current) {
-          try { playProgressRegionRef.current.remove(); } catch {}
-          const overlay = regionsPluginRef.current.addRegion({
-            id: 'play-progress',
-            start,
-            end: t,
-            color: 'rgba(14, 165, 233, 0.35)',
-            drag: false,
-            resize: false,
-          });
-          playProgressRegionRef.current = overlay;
+        if (playProgressRegionRef.current) {
+          const lastEnd = playProgressLastEndRef.current;
+          const delta = t - lastEnd;
+          if (delta !== 0) {
+            try {
+              playProgressRegionRef.current.onResize(delta);
+              playProgressLastEndRef.current = t;
+            } catch {}
+          }
         }
         // 动态检测是否到达选区末尾
         if (time >= region.end) {
@@ -177,17 +231,12 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
           wavesurfer.setTime(region.start);
           setIsPlaying(false);
           isPlayingRef.current = false;
-          if (playProgressRegionRef.current && regionsPluginRef.current) {
-            try { playProgressRegionRef.current.remove(); } catch {}
-            const overlay = regionsPluginRef.current.addRegion({
-              id: 'play-progress',
-              start: region.start,
-              end: region.start,
-              color: 'rgba(14, 165, 233, 0.35)',
-              drag: false,
-              resize: false,
-            });
-            playProgressRegionRef.current = overlay;
+          if (playProgressRegionRef.current) {
+            const resetDelta = region.start - playProgressLastEndRef.current;
+            try {
+              playProgressRegionRef.current.onResize(resetDelta);
+              playProgressLastEndRef.current = region.start;
+            } catch {}
           }
         }
       }
@@ -196,9 +245,10 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
     regions.on('region-updated', (region: any) => {
       currentRegionRef.current = region;
       setSelectedRegion({ start: region.start, end: region.end });
+      updateOverlayPositions(currentTime);
     });
 
-    regions.on('region-update-end', (region: any) => {
+    regions.on('region-update-end' as any, (region: any) => {
       currentRegionRef.current = region;
       setSelectedRegion({ start: region.start, end: region.end });
       if (wavesurferRef.current) {
@@ -209,18 +259,14 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
         isPlayingRef.current = false;
         setCurrentTime(region.start);
       }
-      if (playProgressRegionRef.current && regionsPluginRef.current) {
-        try { playProgressRegionRef.current.remove(); } catch {}
-        const overlay = regionsPluginRef.current.addRegion({
-          id: 'play-progress',
-          start: region.start,
-          end: region.start,
-          color: 'rgba(14, 165, 233, 0.35)',
-          drag: false,
-          resize: false,
-        });
-        playProgressRegionRef.current = overlay;
+      if (playProgressRegionRef.current) {
+        const resetDelta = region.start - playProgressLastEndRef.current;
+        try {
+          playProgressRegionRef.current.onResize(resetDelta);
+          playProgressLastEndRef.current = region.start;
+        } catch {}
       }
+      updateOverlayPositions(region.start);
     });
 
     wavesurferRef.current = wavesurfer;
@@ -270,7 +316,14 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
 
     isPlayingRef.current = true;
     setIsPlaying(true);
-    wavesurfer.setTime(region.start);
+    let resumeTime = currentTime;
+    if (Number.isNaN(resumeTime) || resumeTime < region.start || resumeTime > region.end) {
+      resumeTime = region.start;
+    }
+    if (resumeTime >= region.end) {
+      resumeTime = region.start;
+    }
+    wavesurfer.setTime(resumeTime);
     wavesurfer.play();
   };
 
@@ -618,25 +671,38 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
         wave {
           overflow: visible !important;
         }
-        #waveform ::part(cursor) { position: relative; z-index: 20; opacity: 1; }
-        #waveform ::part(cursor)::after {
+        /* 确保光标在播放时始终可见 */
+        #waveform ::part(cursor) { 
+          z-index: 100 !important; 
+          opacity: 1 !important; 
+          background: #0ea5e9 !important; 
+          box-shadow: 0 0 0 1px rgba(255,255,255,0.9) !important; 
+          display: block !important;
+          visibility: visible !important;
+        }
+        /* 播放时强制显示光标 */
+        #waveform.is-playing ::part(cursor) {
+          opacity: 1 !important;
+          display: block !important;
+          visibility: visible !important;
+        }
+      #waveform ::part(cursor)::before { display: none !important; }
+
+      #waveform::after {
           content: var(--cursor-time);
           position: absolute;
-          bottom: calc(100% + 6px);
-          left: 0;
+          top: -99px !important;
+          left: var(--cursor-x);
           transform: translateX(-50%);
-          background: rgba(0,0,0,0.6);
+          background: rgba(0,0,0,0.7);
           color: #fff;
-          font-size: 11px;
+          font-size: 12px;
           line-height: 1;
           padding: 2px 6px;
           border-radius: 4px;
           white-space: nowrap;
           pointer-events: none;
-          opacity: 0;
-          transition: opacity 120ms ease-in-out;
         }
-        #waveform.is-playing ::part(cursor)::after { opacity: 0.95; }
         
         #waveform ::part(region-handle-left),
         #waveform ::part(handle-left),
@@ -658,7 +724,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
             inset 0 1px 3px rgba(255, 255, 255, 0.4) !important;
           cursor: ew-resize !important;
           opacity: 1 !important;
-          z-index: 10 !important;
+          z-index: 50 !important;
         }
         
         #waveform ::part(region-handle-right),
@@ -680,10 +746,10 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
             inset 0 1px 3px rgba(255, 255, 255, 0.4) !important;
           cursor: ew-resize !important;
           opacity: 1 !important;
-          z-index: 10 !important;
+          z-index: 50 !important;
         }
 
-        #waveform ::part(region) { overflow: visible !important; }
+        #waveform ::part(region) { overflow: visible !important; z-index: 10 !important; }
         
         #waveform ::part(region-handle-left)::before,
         #waveform ::part(region-handle-right)::before {
@@ -763,8 +829,10 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
               ref={waveformRef}
               id="waveform"
               className="mb-3 bg-neutral-50 rounded-lg border border-neutral-200 p-2"
-              style={{ minHeight: '120px', width: '100%' }}
-            ></div>
+              style={{ minHeight: '120px', width: '100%', position: 'relative' }}
+            >
+              
+            </div>
 
             {isLoading && (
               <div className="h-20 flex items-center justify-center bg-neutral-50 rounded-lg mb-3">
