@@ -985,9 +985,9 @@ const PageComponent = ({
                     <h3 className="font-semibold text-neutral-900 mb-2">
                       {question}
                     </h3>
-                    <p className="text-neutral-600">
-                      {answer}
-                    </p>
+                    <div className="text-neutral-600 prose prose-sm max-w-none">
+                      <Markdown>{answer}</Markdown>
+                    </div>
                   </div>
                 );
               })}
