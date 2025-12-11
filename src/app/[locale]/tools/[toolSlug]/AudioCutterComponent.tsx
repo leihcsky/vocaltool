@@ -536,10 +536,14 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
         #waveform ::part(handle-left),
         #waveform ::part(region-handle) {
           position: absolute !important;
+          top: 0 !important;
+          bottom: 0 !important;
           width: 8px !important;
           min-width: 8px !important;
           max-width: 8px !important;
           height: 100% !important;
+          box-sizing: border-box !important;
+          background-clip: padding-box !important;
           background: linear-gradient(180deg, #60d5ff 0%, #0ea5e9 50%, #0284c7 100%) !important;
           border: 2px solid #0369a1 !important;
           border-radius: 6px 0 0 6px !important;
@@ -554,10 +558,14 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
         #waveform ::part(region-handle-right),
         #waveform ::part(handle-right) {
           position: absolute !important;
+          top: 0 !important;
+          bottom: 0 !important;
           width: 8px !important;
           min-width: 8px !important;
           max-width: 8px !important;
           height: 100% !important;
+          box-sizing: border-box !important;
+          background-clip: padding-box !important;
           background: linear-gradient(180deg, #60d5ff 0%, #0ea5e9 50%, #0284c7 100%) !important;
           border: 2px solid #0369a1 !important;
           border-radius: 0 6px 6px 0 !important;
@@ -567,6 +575,10 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
           cursor: ew-resize !important;
           opacity: 1 !important;
           z-index: 10 !important;
+        }
+
+        #waveform ::part(region) {
+          overflow: visible !important;
         }
         
         #waveform ::part(region-handle-left)::before,
