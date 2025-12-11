@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js';
+import HoverPlugin from 'wavesurfer.js/dist/plugins/hover.js';
 import { 
   PlayIcon, 
   PauseIcon, 
@@ -36,11 +37,23 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
   const isFirstLoadRef = useRef(true);
   const currentRegionRef = useRef<any>(null);
   const isPlayingRef = useRef(false);
+  const playProgressRegionRef = useRef<any>(null);
 
   // Ensure component is mounted (client-side only)
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Toggle playing class on container for cursor time label visibility
+  useEffect(() => {
+    const el = waveformRef.current;
+    if (!el) return;
+    if (isPlaying) {
+      el.classList.add('is-playing');
+    } else {
+      el.classList.remove('is-playing');
+    }
+  }, [isPlaying]);
 
   // Initialize WaveSurfer and load audio whenever a file is selected
   useEffect(() => {
@@ -48,9 +61,16 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
 
     setIsLoading(true);
 
-    // Create regions plugin
     const regions = RegionsPlugin.create();
     regionsPluginRef.current = regions;
+    const hover = HoverPlugin.create({
+      formatTimeCallback: (s: number) => formatTime(s),
+      labelBackground: 'rgba(0,0,0,0.35)',
+      labelColor: '#ffffff',
+      labelSize: '11px',
+      lineColor: '#0ea5e9',
+      lineWidth: 1,
+    });
 
     // Create WaveSurfer instance with plugins
     const wavesurfer = WaveSurfer.create({
@@ -60,7 +80,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
       cursorColor: '#0ea5e9',
       barWidth: 2,
       barRadius: 2,
-      cursorWidth: 2,
+      cursorWidth: 3,
       height: 100,
       barGap: 1,
       normalize: true,
@@ -69,7 +89,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
       autoScroll: true,
       autoCenter: true,
       dragToSeek: false, // 禁用点击跳转，只在选区内播放
-      plugins: [regions],
+      plugins: [regions, hover],
     });
 
     wavesurfer.on('ready', () => {
@@ -97,6 +117,16 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
         });
         currentRegionRef.current = region;
         setSelectedRegion({ start: 0, end: dur });
+
+        const progressOverlay = regions.addRegion({
+          id: 'play-progress',
+          start: region.start,
+          end: region.start,
+          color: 'rgba(14, 165, 233, 0.35)',
+          drag: false,
+          resize: false,
+        });
+        playProgressRegionRef.current = progressOverlay;
       }
     });
 
@@ -118,15 +148,47 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
 
     wavesurfer.on('timeupdate', (time) => {
       setCurrentTime(time);
+      // Update cursor label content via CSS variable
+      if (waveformRef.current) {
+        const label = `"${formatTime(time)}"`;
+        waveformRef.current.style.setProperty('--cursor-time', label);
+      }
       
       const region = currentRegionRef.current;
       if (region && isPlayingRef.current) {
+        const start = region.start;
+        const end = region.end;
+        const t = Math.min(Math.max(time, start), end);
+        if (playProgressRegionRef.current && regionsPluginRef.current) {
+          try { playProgressRegionRef.current.remove(); } catch {}
+          const overlay = regionsPluginRef.current.addRegion({
+            id: 'play-progress',
+            start,
+            end: t,
+            color: 'rgba(14, 165, 233, 0.35)',
+            drag: false,
+            resize: false,
+          });
+          playProgressRegionRef.current = overlay;
+        }
         // 动态检测是否到达选区末尾
         if (time >= region.end) {
           wavesurfer.pause();
           wavesurfer.setTime(region.start);
           setIsPlaying(false);
           isPlayingRef.current = false;
+          if (playProgressRegionRef.current && regionsPluginRef.current) {
+            try { playProgressRegionRef.current.remove(); } catch {}
+            const overlay = regionsPluginRef.current.addRegion({
+              id: 'play-progress',
+              start: region.start,
+              end: region.start,
+              color: 'rgba(14, 165, 233, 0.35)',
+              drag: false,
+              resize: false,
+            });
+            playProgressRegionRef.current = overlay;
+          }
         }
       }
     });
@@ -134,6 +196,31 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
     regions.on('region-updated', (region: any) => {
       currentRegionRef.current = region;
       setSelectedRegion({ start: region.start, end: region.end });
+    });
+
+    regions.on('region-update-end', (region: any) => {
+      currentRegionRef.current = region;
+      setSelectedRegion({ start: region.start, end: region.end });
+      if (wavesurferRef.current) {
+        const ws = wavesurferRef.current;
+        ws.pause();
+        ws.setTime(region.start);
+        setIsPlaying(false);
+        isPlayingRef.current = false;
+        setCurrentTime(region.start);
+      }
+      if (playProgressRegionRef.current && regionsPluginRef.current) {
+        try { playProgressRegionRef.current.remove(); } catch {}
+        const overlay = regionsPluginRef.current.addRegion({
+          id: 'play-progress',
+          start: region.start,
+          end: region.start,
+          color: 'rgba(14, 165, 233, 0.35)',
+          drag: false,
+          resize: false,
+        });
+        playProgressRegionRef.current = overlay;
+      }
     });
 
     wavesurferRef.current = wavesurfer;
@@ -531,6 +618,25 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
         wave {
           overflow: visible !important;
         }
+        #waveform ::part(cursor) { position: relative; z-index: 20; opacity: 1; }
+        #waveform ::part(cursor)::after {
+          content: var(--cursor-time);
+          position: absolute;
+          bottom: calc(100% + 6px);
+          left: 0;
+          transform: translateX(-50%);
+          background: rgba(0,0,0,0.6);
+          color: #fff;
+          font-size: 11px;
+          line-height: 1;
+          padding: 2px 6px;
+          border-radius: 4px;
+          white-space: nowrap;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 120ms ease-in-out;
+        }
+        #waveform.is-playing ::part(cursor)::after { opacity: 0.95; }
         
         #waveform ::part(region-handle-left),
         #waveform ::part(handle-left),
@@ -577,9 +683,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
           z-index: 10 !important;
         }
 
-        #waveform ::part(region) {
-          overflow: visible !important;
-        }
+        #waveform ::part(region) { overflow: visible !important; }
         
         #waveform ::part(region-handle-left)::before,
         #waveform ::part(region-handle-right)::before {
