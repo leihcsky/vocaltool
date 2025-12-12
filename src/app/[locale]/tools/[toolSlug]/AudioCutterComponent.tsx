@@ -45,36 +45,108 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
   const playProgressRegionRef = useRef<any>(null);
   const playProgressLastEndRef = useRef<number>(0);
 
-  const updateOverlayPositions = (time: number) => {
-    if (!waveformRef.current || duration <= 0) return;
-    const container = waveformRef.current as HTMLDivElement;
-    const waveEl = container.querySelector('wave') as HTMLElement | null;
-    const total = waveEl?.scrollWidth ?? container.scrollWidth ?? container.clientWidth;
-    const scrollLeft = waveEl?.scrollLeft ?? container.scrollLeft ?? 0;
-    const client = container.clientWidth || (waveEl?.clientWidth ?? total);
-    const ratio = Math.max(0, Math.min(1, time / duration));
-    const absoluteX = ratio * total;
-    const visibleX = absoluteX - scrollLeft;
-    const clampedLeft = Math.max(0, Math.min(visibleX, client));
-    setOverlayCursorLeft(clampedLeft);
-    container.style.setProperty('--cursor-x', `${clampedLeft}px`);
-    const rect = container.getBoundingClientRect();
-    setLabelLeft(rect.left + clampedLeft);
-    setLabelTop(rect.top - 99);
+  const animationFrameIdRef = useRef<number | null>(null);
 
+  const updateOverlayPositions = (time?: number) => {
+    if (!waveformRef.current) return;
+    
+    // 1. Try to position cursor label using direct DOM coordinates (most accurate)
+    const container = waveformRef.current;
+    const shadowHost = container.firstElementChild;
+    let cursorFound = false;
+
+    if (shadowHost && shadowHost.shadowRoot) {
+      const cursor = shadowHost.shadowRoot.querySelector('[part="cursor"]');
+      if (cursor) {
+        const cursorRect = cursor.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        // Calculate position relative to the container
+        const left = cursorRect.left - containerRect.left + (cursorRect.width / 2);
+        setOverlayCursorLeft(left);
+        cursorFound = true;
+      }
+    }
+
+    // 2. Calculate layout for progress overlay (using internal scroll values if possible)
+    // This is needed because regions/progress might be scrolled out of view
+    if (duration <= 0) return;
+    
+    const targetTime = time ?? currentTime;
+    let scrollWidth = 0;
+    let scrollLeft = 0;
+    let clientWidth = container.clientWidth;
+    let offsetLeft = 0;
+
+    // Try to get scroll info from Shadow DOM structure
+    if (shadowHost && shadowHost.shadowRoot) {
+      // WaveSurfer v7 typically has a .scroll container inside shadow root
+      const scrollContainer = shadowHost.shadowRoot.querySelector('.scroll') as HTMLElement;
+      if (scrollContainer) {
+        scrollWidth = scrollContainer.scrollWidth;
+        scrollLeft = scrollContainer.scrollLeft;
+        // Adjust offset if there's padding on the host
+        const hostRect = shadowHost.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        offsetLeft = hostRect.left - containerRect.left;
+      } else {
+         // Fallback to host if .scroll not found
+         scrollWidth = shadowHost.scrollWidth;
+         scrollLeft = shadowHost.scrollLeft;
+      }
+    } else {
+      // Fallback for non-shadow DOM or initialization
+      scrollWidth = container.scrollWidth;
+      scrollLeft = container.scrollLeft;
+    }
+
+    // Fallback cursor position if DOM method failed
+    if (!cursorFound && scrollWidth > 0) {
+      const ratio = Math.max(0, Math.min(1, targetTime / duration));
+      const absoluteX = ratio * scrollWidth;
+      const visibleX = absoluteX - scrollLeft;
+      setOverlayCursorLeft(visibleX + offsetLeft);
+    }
+    
+    // Update Progress Overlay Position
     const region = currentRegionRef.current;
-    if (region) {
+    if (region && scrollWidth > 0) {
       const startRatio = Math.max(0, Math.min(1, region.start / duration));
-      const startAbsX = startRatio * total;
+      const startAbsX = startRatio * scrollWidth;
       const startVisX = startAbsX - scrollLeft;
+      
+      const currentRatio = Math.max(0, Math.min(1, targetTime / duration));
+      const currentAbsX = currentRatio * scrollWidth;
+      const visibleX = currentAbsX - scrollLeft;
+
+      setOverlayProgressLeft(Math.max(0, startVisX + offsetLeft));
       const width = Math.max(0, visibleX - startVisX);
-      setOverlayProgressLeft(Math.max(0, Math.min(startVisX, client)));
-      setOverlayProgressWidth(Math.max(0, Math.min(width, client)));
+      setOverlayProgressWidth(width);
     } else {
       setOverlayProgressLeft(0);
       setOverlayProgressWidth(0);
     }
   };
+
+  // Animation loop for smooth cursor tracking
+  useEffect(() => {
+    if (isPlaying) {
+      const loop = () => {
+        updateOverlayPositions();
+        animationFrameIdRef.current = requestAnimationFrame(loop);
+      };
+      loop();
+    } else {
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+        animationFrameIdRef.current = null;
+      }
+    }
+    return () => {
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+      }
+    };
+  }, [isPlaying]);
 
   // Ensure component is mounted (client-side only)
   useEffect(() => {
@@ -197,63 +269,14 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
       isPlayingRef.current = false;
     });
 
+    wavesurfer.on('interaction', () => {
+        updateOverlayPositions();
+    });
+
     wavesurfer.on('timeupdate', (time) => {
       setCurrentTime(time);
-      // Update cursor label content via CSS variable
-      if (waveformRef.current) {
-        const label = `"${formatTime(time)}"`;
-        waveformRef.current.style.setProperty('--cursor-time', label);
-        // 确保光标在播放时可见，并设置 position: relative 以支持 ::before 伪元素
-        if (isPlayingRef.current) {
-          const cursor = waveformRef.current.querySelector('[part="cursor"]') as HTMLElement;
-          if (cursor) {
-            cursor.style.opacity = '1';
-            cursor.style.display = 'block';
-            cursor.style.visibility = 'visible';
-            // 动态设置 position: relative 以支持 ::before 伪元素显示时间
-            const computedStyle = window.getComputedStyle(cursor);
-            if (computedStyle.position === 'static' || !computedStyle.position) {
-              cursor.style.position = 'relative';
-            }
-            // 确保光标本身仍然可见（设置明确的宽度和高度）
-            if (!cursor.style.width || cursor.style.width === '0px') {
-              cursor.style.width = '2px';
-            }
-            if (!cursor.style.height || cursor.style.height === '0px') {
-              cursor.style.height = '100%';
-            }
-          }
-        }
-        // 更新时间标签位置（使用独立元素）
-        const cursorEl = waveformRef.current.querySelector('[part="cursor"]') as HTMLElement | null;
-        if (cursorEl && isPlayingRef.current) {
-          const rect = cursorEl.getBoundingClientRect();
-          if (rect.width > 0 && rect.height > 0) {
-            setLabelLeft(rect.left + rect.width / 2);
-            setLabelTop(rect.top - 8);
-          }
-        }
-      }
-      updateOverlayPositions(time);
-
-      // 模拟 Hover 插件在光标位置显示时间标签
-      if (waveformRef.current) {
-        const container = waveformRef.current as HTMLDivElement;
-        const waveEl = container.querySelector('wave') as HTMLElement | null;
-        if (waveEl) {
-          const rect = waveEl.getBoundingClientRect();
-          const total = (waveEl as any).scrollWidth ?? container.scrollWidth ?? container.clientWidth;
-          const scrollLeft = (waveEl as any).scrollLeft ?? container.scrollLeft ?? 0;
-          const client = container.clientWidth || ((waveEl as any).clientWidth ?? total);
-          const ratio = Math.max(0, Math.min(1, time / duration));
-          const absoluteX = ratio * total;
-          const visibleX = absoluteX - scrollLeft;
-          const clampedLeft = Math.max(0, Math.min(visibleX, client));
-          const clientX = rect.left + clampedLeft;
-          const clientY = rect.top + rect.height / 2;
-          const ev = new MouseEvent('mousemove', { clientX, clientY, bubbles: true, cancelable: false });
-          waveEl.dispatchEvent(ev);
-        }
+      if (!isPlayingRef.current) {
+        updateOverlayPositions(time);
       }
       
       const region = currentRegionRef.current;
@@ -854,12 +877,15 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
               </button>
             </div>
 
-            <div
-              ref={waveformRef}
-              id="waveform"
-              className="mb-3 bg-neutral-50 rounded-lg border border-neutral-200 p-2"
-              style={{ minHeight: '120px', width: '100%', position: 'relative' }}
-            >
+            <div className="relative group">
+              <div
+                ref={waveformRef}
+                id="waveform"
+                className="mb-3 bg-neutral-50 rounded-lg border border-neutral-200 p-2"
+                style={{ minHeight: '120px', width: '100%', position: 'relative' }}
+              >
+              </div>
+
               {audioFile && (
                 <div
                   id="cursor-time-label"
@@ -867,7 +893,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
                   style={{
                     position: 'absolute',
                     left: `${overlayCursorLeft}px`,
-                    top: 0,
+                    top: '8px',
                     transform: 'translate(-50%, -100%)',
                     background: 'rgba(0,0,0,0.7)',
                     color: '#fff',
@@ -876,7 +902,8 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
                     padding: '2px 6px',
                     borderRadius: 4,
                     whiteSpace: 'nowrap',
-                    zIndex: 1000
+                    zIndex: 1000,
+                    marginTop: '-4px' // Add a little spacing
                   }}
                 >
                   {formatTime(currentTime)}
