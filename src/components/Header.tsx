@@ -35,6 +35,7 @@ export default function Header({
     { name: toolsListText.vocalRemover, slug: 'vocal-remover', emoji: '🎤' },
     { name: toolsListText.audioSplitter, slug: 'audio-splitter', emoji: '🎚️' },
     { name: toolsListText.audioCutter, slug: 'audio-cutter', emoji: '✂️' },
+    { name: toolsListText.audioConverter, slug: 'audio-converter', emoji: '🔄' }
   ];
 
   const [pageResult] = useState(getLinkHref(locale, page))

@@ -13,7 +13,8 @@ const AVAILABLE_TOOLS = [
   'karaoke-maker',
   'extract-vocals',
   'acapella-maker',
-  'noise-reducer'
+  'noise-reducer',
+  'audio-converter'
 ];
 
 export default async function ToolPage({ 

@@ -30,6 +30,12 @@ const ToolsSidebar = ({ locale, currentToolSlug }: ToolsSidebarProps) => {
       emoji: '✂️',
       gradient: 'from-red-500 to-red-600'
     },
+    {
+      name: toolsListText.audioConverter,
+      slug: 'audio-converter',
+      emoji: '🔄',
+      gradient: 'from-purple-500 to-purple-600'
+    }
   ];
 
   const handleToolClick = (slug: string) => {

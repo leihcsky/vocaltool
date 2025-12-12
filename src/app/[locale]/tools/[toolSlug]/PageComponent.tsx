@@ -7,6 +7,7 @@ import AudioWaveform from "~/components/AudioWaveform";
 import PricingModal from "~/components/PricingModal";
 import ToolInternalLinks from "~/components/ToolInternalLinks";
 import AudioCutterComponent from "./AudioCutterComponent";
+import AudioConverterComponent from "./AudioConverterComponent";
 import { useState, useEffect, useRef } from "react";
 import { useCommonContext } from "~/context/common-context";
 import { useFingerprint } from "~/hooks/useFingerprint";
@@ -101,6 +102,12 @@ const PageComponent = ({
         name: toolsListText.audioCutter,
         description: toolsListText.audioCutterDesc,
         emoji: '✂️'
+      },
+      'audio-converter': {
+        slug: 'audio-converter',
+        name: toolsListText.audioConverter,
+        description: toolsListText.audioConverterDesc,
+        emoji: '🔄'
       }
     };
 
@@ -128,6 +135,7 @@ const PageComponent = ({
     'extract-vocals': 'extract_vocals',
     'acapella-maker': 'acapella_maker',
     'noise-reducer': 'noise_reducer',
+    'audio-converter': 'audio_converter',
   };
   const toolCode = toolCodeMap[toolSlug] || 'vocal_remover';
 
@@ -464,6 +472,7 @@ const PageComponent = ({
       'extract-vocals': 'extract vocals, vocal isolation, acapella extraction, voice extractor, isolate vocals',
       'acapella-maker': 'acapella maker, vocal only, isolated vocals, voice track, acapella extractor',
       'noise-reducer': 'noise reducer, audio cleanup, remove background noise, denoise audio, audio noise removal',
+      'audio-converter': 'audio converter, mp3 converter, wav converter, audio format converter, online audio converter',
     };
     return `${baseKeywords}, ${toolKeywords[slug] || ''}`;
   };
@@ -508,9 +517,11 @@ const PageComponent = ({
                   : 'max-w-4xl mx-auto'
             }>
               <div className="bg-white rounded-2xl shadow-lg border border-neutral-200 p-8 sm:p-12">
-                {/* Audio Cutter - 使用独立组件 */}
+                {/* Audio Cutter & Converter - 使用独立组件 */}
                 {toolSlug === 'audio-cutter' ? (
                   <AudioCutterComponent toolPageText={toolPageText} />
+                ) : toolSlug === 'audio-converter' ? (
+                  <AudioConverterComponent toolPageText={toolPageText} />
                 ) : (
                   <>
                     {/* 使用限制提示 - 仅非 audio-splitter 显示 */}

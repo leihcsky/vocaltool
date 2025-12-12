@@ -47,6 +47,8 @@ export const getToolsListText = async () => {
     acapellaMakerDesc: tTools('acapellaMakerDesc'),
     noiseReducer: tTools('noiseReducer'),
     noiseReducerDesc: tTools('noiseReducerDesc'),
+    audioConverter: tTools('audioConverter'),
+    audioConverterDesc: tTools('audioConverterDesc'),
   }
 }
 
@@ -97,6 +99,7 @@ export const getToolPageText = async (toolSlug: string) => {
     descriptionBelowH1Text: tTool('descriptionBelowH1Text'),
     uploadTitle: tTool('uploadTitle'),
     uploadDesc: tTool('uploadDesc'),
+    fromUrl: safeGet('fromUrl'),
     processButton: tTool('processButton'),
     usageLimitNotice: safeGet('usageLimitNotice'),
     // Sound source options (only for audio-splitter)
