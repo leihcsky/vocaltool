@@ -50,10 +50,20 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
   const updateOverlayPositions = (time?: number) => {
     if (!waveformRef.current) return;
     
+    // Get real-time current time directly from instance to avoid closure staleness in RAF
+    let targetTime = time;
+    if (targetTime === undefined && wavesurferRef.current) {
+      targetTime = wavesurferRef.current.getCurrentTime();
+    }
+    if (targetTime === undefined) {
+      targetTime = currentTime;
+    }
+    
     // 1. Try to position cursor label using direct DOM coordinates (most accurate)
     const container = waveformRef.current;
     const shadowHost = container.firstElementChild;
     let cursorFound = false;
+    let cursorVisualLeft = 0;
 
     if (shadowHost && shadowHost.shadowRoot) {
       const cursor = shadowHost.shadowRoot.querySelector('[part="cursor"]');
@@ -61,8 +71,8 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
         const cursorRect = cursor.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
         // Calculate position relative to the container
-        const left = cursorRect.left - containerRect.left + (cursorRect.width / 2);
-        setOverlayCursorLeft(left);
+        cursorVisualLeft = cursorRect.left - containerRect.left + (cursorRect.width / 2);
+        setOverlayCursorLeft(cursorVisualLeft);
         cursorFound = true;
       }
     }
@@ -71,7 +81,6 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
     // This is needed because regions/progress might be scrolled out of view
     if (duration <= 0) return;
     
-    const targetTime = time ?? currentTime;
     let scrollWidth = 0;
     let scrollLeft = 0;
     let clientWidth = container.clientWidth;
@@ -104,7 +113,8 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
       const ratio = Math.max(0, Math.min(1, targetTime / duration));
       const absoluteX = ratio * scrollWidth;
       const visibleX = absoluteX - scrollLeft;
-      setOverlayCursorLeft(visibleX + offsetLeft);
+      cursorVisualLeft = visibleX + offsetLeft;
+      setOverlayCursorLeft(cursorVisualLeft);
     }
     
     // Update Progress Overlay Position
@@ -113,13 +123,13 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
       const startRatio = Math.max(0, Math.min(1, region.start / duration));
       const startAbsX = startRatio * scrollWidth;
       const startVisX = startAbsX - scrollLeft;
-      
-      const currentRatio = Math.max(0, Math.min(1, targetTime / duration));
-      const currentAbsX = currentRatio * scrollWidth;
-      const visibleX = currentAbsX - scrollLeft;
+      const startVisualLeft = startVisX + offsetLeft;
 
-      setOverlayProgressLeft(Math.max(0, startVisX + offsetLeft));
-      const width = Math.max(0, visibleX - startVisX);
+      setOverlayProgressLeft(Math.max(0, startVisualLeft));
+      
+      // Calculate width based on visual positions to ensure perfect alignment with cursor
+      // Right edge = cursorVisualLeft. Left edge = startVisualLeft.
+      const width = Math.max(0, cursorVisualLeft - startVisualLeft);
       setOverlayProgressWidth(width);
     } else {
       setOverlayProgressLeft(0);
@@ -239,7 +249,8 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
         playProgressRegionRef.current = progressOverlay;
         playProgressLastEndRef.current = region.start;
       }
-      updateOverlayPositions(0);
+      // 延迟调用，确保 DOM 布局完成
+      setTimeout(() => updateOverlayPositions(0), 50);
     });
 
     wavesurfer.on('error', (error) => {
@@ -885,6 +896,24 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
                 style={{ minHeight: '120px', width: '100%', position: 'relative' }}
               >
               </div>
+
+              {/* Progress Overlay (Coloring from start to cursor) */}
+              {audioFile && isPlaying && (
+                <div
+                  className="pointer-events-none"
+                  style={{
+                    position: 'absolute',
+                    left: `${overlayProgressLeft}px`,
+                    top: '8px', // Match p-2 (8px) padding of container
+                    width: `${overlayProgressWidth}px`,
+                    height: '100px', // Match WaveSurfer height
+                    backgroundColor: 'hsla(143, 62%, 70%, 0.35)',
+                    zIndex: 15, // Above regions (10) but below cursor (100/1000)
+                    mixBlendMode: 'multiply',
+                    borderRadius: '2px',
+                  }}
+                />
+              )}
 
               {audioFile && (
                 <div
