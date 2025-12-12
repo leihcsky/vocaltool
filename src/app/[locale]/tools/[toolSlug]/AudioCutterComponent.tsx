@@ -33,6 +33,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
   const [isMounted, setIsMounted] = useState(false);
   const [history, setHistory] = useState<AudioBuffer[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [showTimeLabel, setShowTimeLabel] = useState(false);
 
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
@@ -249,6 +250,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
         playProgressRegionRef.current = progressOverlay;
         playProgressLastEndRef.current = region.start;
       }
+      setShowTimeLabel(false);
       // 延迟调用，确保 DOM 布局完成
       setTimeout(() => updateOverlayPositions(0), 50);
     });
@@ -262,6 +264,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
     wavesurfer.on('play', () => {
       setIsPlaying(true);
       isPlayingRef.current = true;
+      setShowTimeLabel(true);
       if (waveformRef.current) {
         const cursor = waveformRef.current.querySelector('[part="cursor"]') as HTMLElement;
         if (cursor) {
@@ -278,6 +281,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
     wavesurfer.on('finish', () => {
       setIsPlaying(false);
       isPlayingRef.current = false;
+      setShowTimeLabel(false);
     });
 
     wavesurfer.on('interaction', () => {
@@ -311,6 +315,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
           wavesurfer.setTime(region.start);
           setIsPlaying(false);
           isPlayingRef.current = false;
+          setShowTimeLabel(false);
           if (playProgressRegionRef.current) {
             const resetDelta = region.start - playProgressLastEndRef.current;
             try {
@@ -337,6 +342,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
         ws.setTime(region.start);
         setIsPlaying(false);
         isPlayingRef.current = false;
+        setShowTimeLabel(false);
         setCurrentTime(region.start);
       }
       if (playProgressRegionRef.current) {
@@ -527,6 +533,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
       setCurrentTime(0);
       setIsPlaying(false);
       isPlayingRef.current = false;
+      setShowTimeLabel(false);
     }
   };
 
@@ -915,7 +922,7 @@ export default function AudioCutterComponent({ toolPageText }: AudioCutterCompon
                 />
               )}
 
-              {audioFile && (
+              {audioFile && showTimeLabel && (
                 <div
                   id="cursor-time-label"
                   className="pointer-events-none"
