@@ -335,6 +335,7 @@ export const getMenuText = async () => {
     footerCompany0: tMenu('footerCompany0'),
     footerCompany1: tMenu('footerCompany1'),
     footerCompany2: tMenu('footerCompany2'),
+    footerCopyright: tMenu('footerCopyright'),
   }
 }
 

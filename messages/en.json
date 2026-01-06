@@ -49,7 +49,8 @@
     "footerCompany": "Company",
     "footerCompany0": "About",
     "footerCompany1": "Blog",
-    "footerCompany2": "Contact"
+    "footerCompany2": "Contact",
+    "footerCopyright": "All rights reserved."
   },
   "AuthText": {
     "loginText": "Log in",

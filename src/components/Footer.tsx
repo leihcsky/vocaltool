@@ -41,15 +41,17 @@ export default function Footer({
   }
 
   return (
-    <footer aria-labelledby="footer-heading">
+    <footer aria-labelledby="footer-heading" className="bg-neutral-900">
       <div id="footer-heading" className="sr-only">
         Footer
       </div>
-      <div className="mx-auto max-w-7xl px-6 py-4">
-        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="space-y-8">
+      <div className="mx-auto max-w-7xl px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+          {/* Brand Section */}
+          <div className="lg:col-span-1">
             <Link
               href={getLinkHref(locale, '')}
+              className="inline-block mb-4"
             >
               <img
                 className="h-10 w-auto"
@@ -57,116 +59,111 @@ export default function Footer({
                 alt={process.env.NEXT_PUBLIC_DOMAIN_NAME}
               />
             </Link>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-neutral-400 leading-relaxed">
               {commonText.footerDescText}
             </p>
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
-            <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <div className="text-sm font-semibold leading-6 text-white">{menuText.footerCompany}</div>
-                <ul role="list" className="mt-6 space-y-4">
-                  <li>
-                    <Link
-                      href={getLinkHref(locale, 'about')}
-                      className="text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]"
-                      onClick={()=>checkPageAndLoading('about')}
-                    >
-                      {menuText.footerCompany0}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href={getLinkHref(locale, 'contact')}
-                      className="text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]"
-                      onClick={()=>checkPageAndLoading('contact')}
-                    >
-                      {menuText.footerCompany2}
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div className="mt-10 md:mt-0">
-                <div className="text-sm font-semibold leading-6 text-white">
-                  {process.env.NEXT_PUBLIC_CHECK_AVAILABLE_TIME == '0' ? '' : menuText.footerSupport}
-                </div>
-                <ul role="list" className="mt-6 space-y-4">
-                  {
-                    process.env.NEXT_PUBLIC_CHECK_AVAILABLE_TIME != '0' ?
-                      <li>
-                        <Link
-                          href={getLinkHref(locale, 'pricing')}
-                          className="text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]"
-                          onClick={()=>checkPageAndLoading('pricing')}
-                        >
-                          {menuText.footerSupport0}
-                        </Link>
-                      </li>
-                      :
-                      null
-                  }
-                  {
-                    userData && process.env.NEXT_PUBLIC_CHECK_AVAILABLE_TIME != '0' ?
-                      <li>
-                        <a
-                          onClick={() => manageSubscribe()}
-                          className="cursor-pointer text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]">
-                          {menuText.footerSupport1}
-                        </a>
-                      </li>
-                      :
-                      null
-                  }
-                </ul>
-              </div>
-            </div>
-            <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <div className="text-sm font-semibold leading-6 text-white">{menuText.footerLegal}</div>
-                <ul role="list" className="mt-6 space-y-4">
-                  <li>
-                    <Link
-                      href={getLinkHref(locale, 'privacy-policy')}
-                      className="text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]"
-                      onClick={()=>checkPageAndLoading('privacy-policy')}
-                    >
-                      {menuText.footerLegal0}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href={getLinkHref(locale, 'terms-of-service')}
-                      className="text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]"
-                      onClick={()=>checkPageAndLoading('terms-of-service')}
-                    >
-                      {menuText.footerLegal1}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href={getLinkHref(locale, 'disclaimer')}
-                      className="text-sm leading-6 text-gray-600 hover:text-[#2d6ae0]"
-                      onClick={()=>checkPageAndLoading('disclaimer')}
-                    >
-                      {menuText.footerLegal2}
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div className="mt-10 md:mt-0">
-                <div className="text-sm font-semibold leading-6 text-white"></div>
-                <ul role="list" className="mt-6 space-y-4">
-                  <a
-                    className="text-sm leading-6 footer-link text-white"
-                    target={"_blank"}
-                    href={"https://sticker.show/"}
-                    title={"Free Online AI Sticker Maker & Generator!"}
+
+          {/* Company Section */}
+          <div>
+            <h3 className="text-sm font-semibold leading-6 text-white mb-4">
+              {menuText.footerCompany}
+            </h3>
+            <ul role="list" className="space-y-3">
+              <li>
+                <Link
+                  href={getLinkHref(locale, 'about')}
+                  className="text-sm leading-6 text-neutral-400 hover:text-white transition-colors"
+                  onClick={()=>checkPageAndLoading('about')}
+                >
+                  {menuText.footerCompany0}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={getLinkHref(locale, 'contact')}
+                  className="text-sm leading-6 text-neutral-400 hover:text-white transition-colors"
+                  onClick={()=>checkPageAndLoading('contact')}
+                >
+                  {menuText.footerCompany2}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Support Section */}
+          {process.env.NEXT_PUBLIC_CHECK_AVAILABLE_TIME != '0' && (
+            <div>
+              <h3 className="text-sm font-semibold leading-6 text-white mb-4">
+                {menuText.footerSupport}
+              </h3>
+              <ul role="list" className="space-y-3">
+                <li>
+                  <Link
+                    href={getLinkHref(locale, 'pricing')}
+                    className="text-sm leading-6 text-neutral-400 hover:text-white transition-colors"
+                    onClick={()=>checkPageAndLoading('pricing')}
                   >
-                    Source by Sticker.Show
-                  </a>
-                </ul>
-              </div>
+                    {menuText.footerSupport0}
+                  </Link>
+                </li>
+                {userData && (
+                  <li>
+                    <a
+                      onClick={() => manageSubscribe()}
+                      className="cursor-pointer text-sm leading-6 text-neutral-400 hover:text-white transition-colors">
+                      {menuText.footerSupport1}
+                    </a>
+                  </li>
+                )}
+              </ul>
             </div>
+          )}
+
+          {/* Legal Section */}
+          <div>
+            <h3 className="text-sm font-semibold leading-6 text-white mb-4">
+              {menuText.footerLegal}
+            </h3>
+            <ul role="list" className="space-y-3">
+              <li>
+                <Link
+                  href={getLinkHref(locale, 'privacy-policy')}
+                  className="text-sm leading-6 text-neutral-400 hover:text-white transition-colors"
+                  onClick={()=>checkPageAndLoading('privacy-policy')}
+                >
+                  {menuText.footerLegal0}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={getLinkHref(locale, 'terms-of-service')}
+                  className="text-sm leading-6 text-neutral-400 hover:text-white transition-colors"
+                  onClick={()=>checkPageAndLoading('terms-of-service')}
+                >
+                  {menuText.footerLegal1}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={getLinkHref(locale, 'disclaimer')}
+                  className="text-sm leading-6 text-neutral-400 hover:text-white transition-colors"
+                  onClick={()=>checkPageAndLoading('disclaimer')}
+                >
+                  {menuText.footerLegal2}
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Copyright Section */}
+        <div className="border-t border-neutral-800 pt-8 mt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-neutral-400">
+              © {new Date().getFullYear()} {process.env.NEXT_PUBLIC_WEBSITE_NAME || 'WaveKit'}. {menuText.footerCopyright || 'All rights reserved.'}
+            </p>
+            
           </div>
         </div>
       </div>
