@@ -11,11 +11,15 @@ import {getLinkHref} from "~/configs/buildLink";
 import {WebsiteStructuredData, OrganizationStructuredData} from "~/components/StructuredData";
 import {
   SparklesIcon,
+  CheckIcon,
   BoltIcon,
   GlobeAltIcon,
   CursorArrowRaysIcon,
   RocketLaunchIcon,
-  MusicalNoteIcon
+  MusicalNoteIcon,
+  VideoCameraIcon,
+  MicrophoneIcon,
+  AdjustmentsHorizontalIcon,
 } from '@heroicons/react/24/outline';
 
 const PageComponent = ({
@@ -25,6 +29,7 @@ const PageComponent = ({
                          featuresText,
                          toolsListText,
                          pricingText,
+                         targetAudienceText,
                          searchParams,
                        }: {
                          locale: string;
@@ -33,6 +38,7 @@ const PageComponent = ({
                          featuresText: any;
                          toolsListText: any;
                          pricingText: any;
+                         targetAudienceText: any;
                          searchParams: any;
                        }) => {
   const [pagePath] = useState("");
@@ -84,6 +90,30 @@ const PageComponent = ({
     },
   ];
 
+  // Target audiences data
+  const audiences = [
+    {
+      icon: VideoCameraIcon,
+      title: targetAudienceText.audience1Title,
+      description: targetAudienceText.audience1Desc,
+    },
+    {
+      icon: MusicalNoteIcon,
+      title: targetAudienceText.audience2Title,
+      description: targetAudienceText.audience2Desc,
+    },
+    {
+      icon: MicrophoneIcon,
+      title: targetAudienceText.audience3Title,
+      description: targetAudienceText.audience3Desc,
+    },
+    {
+      icon: AdjustmentsHorizontalIcon,
+      title: targetAudienceText.audience4Title,
+      description: targetAudienceText.audience4Desc,
+    },
+  ];
+
   // Tools data
   const tools = [
     {
@@ -109,6 +139,20 @@ const PageComponent = ({
     },
   ];
 
+  const renderFeatureList = (features: string[]) => {
+    if (!Array.isArray(features)) return null;
+    return (
+      <ul className="mt-8 space-y-4">
+        {features.map((feature, index) => (
+          <li key={index} className="flex items-start">
+            <CheckIcon className="h-6 w-6 text-brand-600 flex-shrink-0" />
+            <span className="ml-3 text-neutral-600">{feature}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   return (
     <>
       {
@@ -122,7 +166,7 @@ const PageComponent = ({
         page={pagePath}
         title={indexText.title}
         description={indexText.description}
-        keywords="AI audio editing, vocal remover, karaoke maker, audio processing, extract vocals, noise reducer, acapella maker, audio tools, music editing, stem separation"
+        keywords="AI audio tools, AI audio toolkit, vocal remover, stem splitter, audio cutter, audio converter, karaoke maker, podcast audio cleanup, YouTube audio, TikTok audio, music editing online, remove vocals from songs, split stems online"
       />
       <WebsiteStructuredData
         name={process.env.NEXT_PUBLIC_BRAND_NAME || "WaveKit"}
@@ -173,17 +217,46 @@ const PageComponent = ({
       </div>
 
 
-      {/* Features Section */}
-      <div className="py-16 bg-white">
+      {/* Target Audience Section */}
+      <div className="py-16 bg-white border-b border-neutral-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-neutral-900 sm:text-4xl">
-              Why Choose WaveKit?
+              {targetAudienceText.title}
             </h2>
             <p className="mt-4 text-lg text-neutral-600">
-              Professional audio editing powered by cutting-edge AI technology
+              {targetAudienceText.subtitle}
             </p>
           </div>
+          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {audiences.map((audience, index) => (
+              <div key={index} className="text-center">
+                <div className="mx-auto flex items-center justify-center w-16 h-16 bg-brand-50 rounded-full mb-6">
+                  <audience.icon className="w-8 h-8 text-brand-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-neutral-900 mb-2">
+                  {audience.title}
+                </h3>
+                <p className="text-neutral-600">
+                  {audience.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+          {/* Features Section */}
+          <div className="py-16 bg-neutral-50">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-neutral-900 sm:text-4xl">
+                  {featuresText.title}
+                </h2>
+                <p className="mt-4 text-lg text-neutral-600">
+                  {featuresText.subtitle}
+                </p>
+              </div>
           <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, index) => (
               <div key={index} className="card p-6 hover:shadow-medium transition-shadow">
@@ -253,132 +326,75 @@ const PageComponent = ({
         </div>
       </div>
 
-      {/* Pricing Preview Section */}
-      <div className="py-16 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-neutral-900 sm:text-4xl">
-              {pricingText.h1Text}
-            </h2>
-            <p className="mt-4 text-lg text-neutral-600">
-              {pricingText.subtitle}
-            </p>
-          </div>
-          <div className="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-3">
-            {/* Free Plan */}
-            <div className="card p-8">
-              <h3 className="text-2xl font-bold text-neutral-900">{pricingText.free}</h3>
-              <p className="mt-4 flex items-baseline">
-                <span className="text-5xl font-bold tracking-tight text-neutral-900">$0</span>
-                <span className="ml-2 text-neutral-600">/ {pricingText.monthText}</span>
-              </p>
-              <ul className="mt-8 space-y-4">
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="ml-3 text-neutral-600">{pricingText.freeIntro0}</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="ml-3 text-neutral-600">{pricingText.freeIntro1}</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="ml-3 text-neutral-600">{pricingText.freeIntro2}</span>
-                </li>
-              </ul>
-              <Link
-                href={getLinkHref(locale, 'tools/vocal-remover')}
-                className="mt-8 block w-full btn-outline text-center"
-              >
-                {pricingText.buyText}
-              </Link>
-            </div>
-
-            {/* Pro Monthly Plan */}
-            <div className="card p-8 ring-2 ring-brand-500 relative">
-              <div className="absolute top-0 right-6 transform -translate-y-1/2">
-                <span className="inline-flex rounded-full bg-brand-500 px-4 py-1 text-sm font-semibold text-white">
-                  {pricingText.popularText}
-                </span>
+          {/* Pricing Preview Section */}
+          <div className="py-16 bg-white">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-neutral-900 sm:text-4xl">
+                  {pricingText.h1Text}
+                </h2>
+                <p className="mt-4 text-lg text-neutral-600">
+                  {pricingText.subtitle}
+                </p>
               </div>
-              <h3 className="text-2xl font-bold text-neutral-900">{pricingText.proMonthly}</h3>
-              <p className="mt-4 flex items-baseline">
-                <span className="text-5xl font-bold tracking-tight text-neutral-900">$9.9</span>
-                <span className="ml-2 text-neutral-600">/ {pricingText.monthText}</span>
-              </p>
-              <ul className="mt-8 space-y-4">
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="ml-3 text-neutral-600">{pricingText.proIntro0}</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="ml-3 text-neutral-600">{pricingText.proIntro1}</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="ml-3 text-neutral-600">{pricingText.proIntro2}</span>
-                </li>
-              </ul>
-              <Link
-                href={getLinkHref(locale, 'pricing')}
-                className="mt-8 block w-full btn-primary text-center"
-              >
-                {pricingText.buyText}
-              </Link>
-            </div>
+              <div className="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-3">
+                {/* Free Plan */}
+                <div className="card p-8">
+                  <h3 className="text-2xl font-bold text-neutral-900">{pricingText.free}</h3>
+                  <p className="mt-4 flex items-baseline">
+                    <span className="text-5xl font-bold tracking-tight text-neutral-900">$0</span>
+                    <span className="ml-2 text-neutral-600">/ {pricingText.monthText}</span>
+                  </p>
+                  {renderFeatureList(pricingText.freeFeatures)}
+                  <Link
+                    href={getLinkHref(locale, 'tools/vocal-remover')}
+                    className="mt-8 block w-full btn-outline text-center"
+                  >
+                    {pricingText.buyText}
+                  </Link>
+                </div>
 
-            {/* Pro Yearly Plan */}
-            <div className="card p-8">
-              <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-neutral-900">{pricingText.proYearly}</h3>
-                <span className="inline-flex rounded-full bg-accent-100 px-3 py-1 text-sm font-semibold text-accent-700">
-                  {pricingText.annuallySaveText}
-                </span>
-              </div>
-              <p className="mt-4 flex items-baseline">
-                <span className="text-5xl font-bold tracking-tight text-neutral-900">$79</span>
-                <span className="ml-2 text-neutral-600">/ {pricingText.annualText}</span>
-              </p>
-              <ul className="mt-8 space-y-4">
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="ml-3 text-neutral-600">{pricingText.proIntro0}</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="ml-3 text-neutral-600">{pricingText.proIntro1}</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="ml-3 text-neutral-600">{pricingText.proIntro2}</span>
-                </li>
-              </ul>
-              <Link
-                href={getLinkHref(locale, 'pricing')}
-                className="mt-8 block w-full btn-outline text-center"
-              >
-                {pricingText.buyText}
-              </Link>
-            </div>
+                {/* Creator Monthly Plan */}
+                <div className="card p-8 ring-2 ring-brand-500 relative">
+                  <div className="absolute top-0 right-6 transform -translate-y-1/2">
+                    <span className="inline-flex rounded-full bg-brand-500 px-4 py-1 text-sm font-semibold text-white">
+                      {pricingText.popularText}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-neutral-900">{pricingText.creatorMonthly}</h3>
+                  <p className="mt-4 flex items-baseline">
+                    <span className="text-5xl font-bold tracking-tight text-neutral-900">$9.9</span>
+                    <span className="ml-2 text-neutral-600">/ {pricingText.monthText}</span>
+                  </p>
+                  {renderFeatureList(pricingText.creatorFeatures)}
+                  <Link
+                    href={getLinkHref(locale, 'pricing')}
+                    className="mt-8 block w-full btn-primary text-center"
+                  >
+                    {pricingText.buyText}
+                  </Link>
+                </div>
+
+                {/* Creator Yearly Plan */}
+                <div className="card p-8">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-bold text-neutral-900">{pricingText.creatorYearly}</h3>
+                    <span className="inline-flex rounded-full bg-accent-100 px-3 py-1 text-sm font-semibold text-accent-700">
+                      {pricingText.annuallySaveText}
+                    </span>
+                  </div>
+                  <p className="mt-4 flex items-baseline">
+                    <span className="text-5xl font-bold tracking-tight text-neutral-900">$79</span>
+                    <span className="ml-2 text-neutral-600">/ {pricingText.annualText}</span>
+                  </p>
+                  {renderFeatureList(pricingText.creatorFeatures)}
+                  <Link
+                    href={getLinkHref(locale, 'pricing')}
+                    className="mt-8 block w-full btn-outline text-center"
+                  >
+                    {pricingText.buyText}
+                  </Link>
+                </div>
           </div>
           <div className="mt-12 text-center">
             <Link

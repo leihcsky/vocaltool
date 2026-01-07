@@ -15,6 +15,8 @@ export const getIndexPageText = async () => {
 export const getFeaturesText = async () => {
   const tFeatures = await getTranslations('FeaturesText');
   return {
+    title: tFeatures('title'),
+    subtitle: tFeatures('subtitle'),
     feature1Title: tFeatures('feature1Title'),
     feature1Desc: tFeatures('feature1Desc'),
     feature2Title: tFeatures('feature2Title'),
@@ -27,6 +29,22 @@ export const getFeaturesText = async () => {
     feature5Desc: tFeatures('feature5Desc'),
     feature6Title: tFeatures('feature6Title'),
     feature6Desc: tFeatures('feature6Desc'),
+  }
+}
+
+export const getTargetAudienceText = async () => {
+  const tTarget = await getTranslations('TargetAudienceText');
+  return {
+    title: tTarget('title'),
+    subtitle: tTarget('subtitle'),
+    audience1Title: tTarget('audience1Title'),
+    audience1Desc: tTarget('audience1Desc'),
+    audience2Title: tTarget('audience2Title'),
+    audience2Desc: tTarget('audience2Desc'),
+    audience3Title: tTarget('audience3Title'),
+    audience3Desc: tTarget('audience3Desc'),
+    audience4Title: tTarget('audience4Title'),
+    audience4Desc: tTarget('audience4Desc'),
   }
 }
 
@@ -92,6 +110,9 @@ export const getToolPageText = async (toolSlug: string) => {
   // to prevent next-intl from logging missing translation warnings.
   const includeStep4Fields = toolSlug === 'audio-splitter' || toolSlug === 'audio-cutter';
 
+  // Only audio-converter uses fromUrl
+  const includeFromUrl = toolSlug === 'audio-converter';
+
   return {
     title: tTool('title') + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME,
     description: tTool('description'),
@@ -99,11 +120,25 @@ export const getToolPageText = async (toolSlug: string) => {
     descriptionBelowH1Text: tTool('descriptionBelowH1Text'),
     uploadTitle: tTool('uploadTitle'),
     uploadDesc: tTool('uploadDesc'),
-    fromUrl: safeGet('fromUrl'),
+    fromUrl: includeFromUrl ? safeGet('fromUrl') : undefined,
     processButton: tTool('processButton'),
     usageLimitNotice: safeGet('usageLimitNotice'),
     // Sound source options (only for audio-splitter)
     soundSourceLabel: includeSoundSourceFields ? safeGet('soundSourceLabel') : undefined,
+    presetsLabel: includeSoundSourceFields ? safeGet('presetsLabel') : undefined,
+    presetKaraoke: includeSoundSourceFields ? safeGet('presetKaraoke') : undefined,
+    presetKaraokeDesc: includeSoundSourceFields ? safeGet('presetKaraokeDesc') : undefined,
+    presetVocal: includeSoundSourceFields ? safeGet('presetVocal') : undefined,
+    presetVocalDesc: includeSoundSourceFields ? safeGet('presetVocalDesc') : undefined,
+    presetDrums: includeSoundSourceFields ? safeGet('presetDrums') : undefined,
+    presetDrumsDesc: includeSoundSourceFields ? safeGet('presetDrumsDesc') : undefined,
+    presetPiano: includeSoundSourceFields ? safeGet('presetPiano') : undefined,
+    presetPianoDesc: includeSoundSourceFields ? safeGet('presetPianoDesc') : undefined,
+    presetRemix: includeSoundSourceFields ? safeGet('presetRemix') : undefined,
+    presetRemixDesc: includeSoundSourceFields ? safeGet('presetRemixDesc') : undefined,
+    advancedLabel: includeSoundSourceFields ? safeGet('advancedLabel') : undefined,
+    advancedToggleShow: includeSoundSourceFields ? safeGet('advancedToggleShow') : undefined,
+    advancedToggleHide: includeSoundSourceFields ? safeGet('advancedToggleHide') : undefined,
     soundSourceAll: includeSoundSourceFields ? safeGet('soundSourceAll') : undefined,
     soundSourceAllDesc: includeSoundSourceFields ? safeGet('soundSourceAllDesc') : undefined,
     soundSourceBass: includeSoundSourceFields ? safeGet('soundSourceBass') : undefined,
@@ -190,64 +225,63 @@ export const getAuthText = async () => {
 
 export const getPricingText = async () => {
   const tPricing = await getTranslations('PricingText');
-  const title = tPricing('title') + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME;
-  const description = tPricing('description');
-  const h1Text =  tPricing('h1Text');
-  const subtitle = tPricing('subtitle');
-  const buyText=  tPricing('buyText');
-  const popularText = tPricing('popularText');
-  const currentPlanText = tPricing('currentPlanText');
-  const free = tPricing('free');
-  const proMonthly = tPricing('proMonthly');
-  const proYearly = tPricing('proYearly');
-  let freeIntro0 = tPricing('freeIntro0');
-  const freeIntro1 = tPricing('freeIntro1');
-  const freeIntro2 = tPricing('freeIntro2');
-  const freeIntro3 = tPricing('freeIntro3');
-  const freeIntro4 = tPricing('freeIntro4');
-  const proIntro0 = tPricing('proIntro0');
-  const proIntro1 = tPricing('proIntro1');
-  const proIntro2 = tPricing('proIntro2');
-  const proIntro3 = tPricing('proIntro3');
-  const proIntro4 = tPricing('proIntro4');
-  const proIntro5 = tPricing('proIntro5');
-  const proIntro6 = tPricing('proIntro6');
-  const proIntro7 = tPricing('proIntro7');
-  const monthlyText = tPricing('monthlyText');
-  const annuallyText = tPricing('annuallyText');
-  const annuallySaveText = tPricing('annuallySaveText');
-
-  // 免费生成次数
-  const freeTimes = process.env.FREE_TIMES || '3';
-  freeIntro0 = freeIntro0.replace(/%freeTimes%/g, freeTimes);
+  
+  // Helper to safely get raw array/object
+  const getRaw = (key: string) => {
+    try {
+      return tPricing.raw(key);
+    } catch {
+      return [];
+    }
+  };
 
   return {
-    title: title,
-    description: description,
-    h1Text: h1Text,
-    subtitle: subtitle,
-    buyText: buyText,
-    popularText: popularText,
-    currentPlanText: currentPlanText,
-    free: free,
-    proMonthly: proMonthly,
-    proYearly: proYearly,
-    freeIntro0: freeIntro0,
-    freeIntro1: freeIntro1,
-    freeIntro2: freeIntro2,
-    freeIntro3: freeIntro3,
-    freeIntro4: freeIntro4,
-    proIntro0: proIntro0,
-    proIntro1: proIntro1,
-    proIntro2: proIntro2,
-    proIntro3: proIntro3,
-    proIntro4: proIntro4,
-    proIntro5: proIntro5,
-    proIntro6: proIntro6,
-    proIntro7: proIntro7,
-    monthlyText: monthlyText,
-    annuallyText: annuallyText,
-    annuallySaveText: annuallySaveText,
+    title: tPricing('title') + ' | ' + process.env.NEXT_PUBLIC_WEBSITE_NAME,
+    description: tPricing('description'),
+    h1Text: tPricing('h1Text'),
+    subtitle: tPricing('subtitle'),
+    buyText: tPricing('buyText'),
+    popularText: tPricing('popularText'),
+    currentPlanText: tPricing('currentPlanText'),
+    
+    // Plan Names
+    free: tPricing('free'),
+    creator: tPricing('creator'),
+    studio: tPricing('studio'),
+    
+    // Billing
+    creatorMonthly: tPricing('creatorMonthly'),
+    creatorYearly: tPricing('creatorYearly'),
+    studioMonthly: tPricing('studioMonthly'),
+    studioYearly: tPricing('studioYearly'),
+    monthText: tPricing('monthText'),
+    monthlyText: tPricing('monthlyText'),
+    annualText: tPricing('annualText'),
+    annuallyText: tPricing('annuallyText'),
+    annuallySaveText: tPricing('annuallySaveText'),
+    
+    // Features Lists (Arrays)
+    freeFeatures: getRaw('freeFeatures'),
+    creatorFeatures: getRaw('creatorFeatures'),
+    studioFeatures: getRaw('studioFeatures'),
+    
+    // Matrix
+    matrixTitle: tPricing('matrixTitle'),
+    matrixColFree: tPricing('matrixColFree'),
+    matrixColCreator: tPricing('matrixColCreator'),
+    matrixColStudio: tPricing('matrixColStudio'),
+    matrixLabels: getRaw('matrixLabels'),
+    matrixBadgePreview: tPricing('matrixBadgePreview'),
+    matrixBadgeLimited: tPricing('matrixBadgeLimited'),
+    matrixBadgeNA: tPricing('matrixBadgeNA'),
+    
+    // Common
+    allPlansIncludeTitle: tPricing('allPlansIncludeTitle'),
+    allPlansInclude: getRaw('allPlansInclude'),
+    
+    // FAQ
+    faqTitle: tPricing('faqTitle'),
+    faq: getRaw('faq'),
   }
 }
 

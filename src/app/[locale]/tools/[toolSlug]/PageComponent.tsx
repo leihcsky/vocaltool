@@ -73,6 +73,8 @@ const PageComponent = ({
   const [subscribeStatus, setSubscribeStatus] = useState<string>('');
   // Audio Splitter 声源选择
   const [soundSource, setSoundSource] = useState<string>('all');
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
 
   const { setShowLoadingModal, setShowPricingModal, setShowLoginModal, userData } = useCommonContext();
   const { fingerprint, isLoading: fingerprintLoading } = useFingerprint();
@@ -562,79 +564,157 @@ const PageComponent = ({
                     {/* 声源选择 - 仅 Audio Splitter 显示 */}
                     {toolSlug === 'audio-splitter' && toolPageText.soundSourceLabel && (
                       <div className="bg-white border border-neutral-200 rounded-xl p-5">
-                        <h3 className="text-base font-semibold text-neutral-900 mb-3">
-                          {toolPageText.soundSourceLabel}
-                        </h3>
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                          {/* All Stems */}
+                        {/* Layer 1: Use-case Presets */}
+                        <div className="mb-6">
+                          <h3 className="text-base font-semibold text-neutral-900 mb-3">
+                            {toolPageText.presetsLabel || 'Select a Use-case'}
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {[
+                              { id: 'karaoke', label: toolPageText.presetKaraoke, desc: toolPageText.presetKaraokeDesc, value: 'all', icon: '🎤' },
+                              { id: 'vocal', label: toolPageText.presetVocal, desc: toolPageText.presetVocalDesc, value: 'all', icon: '👤' },
+                              { id: 'drums', label: toolPageText.presetDrums, desc: toolPageText.presetDrumsDesc, value: 'drums', icon: '🥁' },
+                              { id: 'piano', label: toolPageText.presetPiano, desc: toolPageText.presetPianoDesc, value: 'piano', icon: '🎹' },
+                              { id: 'remix', label: toolPageText.presetRemix, desc: toolPageText.presetRemixDesc, value: 'all', icon: '🎚️' },
+                            ].map((preset) => (
+                              <button
+                                key={preset.id}
+                                onClick={() => {
+                                  setSoundSource(preset.value);
+                                  setActivePreset(preset.id);
+                                }}
+                                className={`p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${
+                                  activePreset === preset.id
+                                    ? 'border-brand-500 bg-brand-50'
+                                    : 'border-neutral-200 hover:border-brand-300 bg-white'
+                                }`}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <span className="text-2xl">{preset.icon}</span>
+                                  <div>
+                                    <p className={`font-semibold ${activePreset === preset.id ? 'text-brand-700' : 'text-neutral-900'}`}>
+                                      {preset.label}
+                                    </p>
+                                    <p className="text-xs text-neutral-500 mt-1">
+                                      {preset.desc}
+                                    </p>
+                                  </div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Layer 2: Advanced (Manual Stem Selection) */}
+                        <div>
                           <button
-                            onClick={() => setSoundSource('all')}
-                            className={`p-3 rounded-lg border-2 transition-all text-center ${
-                              soundSource === 'all'
-                                ? 'border-brand-500 bg-brand-500 text-white shadow-md'
-                                : 'border-neutral-200 hover:border-brand-300 bg-white'
-                            }`}
+                            onClick={() => setShowAdvanced(!showAdvanced)}
+                            className="flex items-center gap-2 text-sm font-medium text-neutral-500 hover:text-brand-600 transition-colors mb-3"
                           >
-                            <p className={`text-sm font-semibold ${soundSource === 'all' ? 'text-white' : 'text-neutral-900'}`}>
-                              {toolPageText.soundSourceAll?.replace(' (4 tracks)', '') || 'All Stems'}
-                            </p>
+                            <span>{showAdvanced ? (toolPageText.advancedToggleHide || 'Hide Advanced Options') : (toolPageText.advancedToggleShow || 'Show Advanced Options')}</span>
+                            <svg
+                              className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                           </button>
 
-                          {/* Bass Only */}
-                          <button
-                            onClick={() => setSoundSource('bass')}
-                            className={`p-3 rounded-lg border-2 transition-all text-center ${
-                              soundSource === 'bass'
-                                ? 'border-brand-500 bg-brand-500 text-white shadow-md'
-                                : 'border-neutral-200 hover:border-brand-300 bg-white'
-                            }`}
-                          >
-                            <p className={`text-sm font-semibold ${soundSource === 'bass' ? 'text-white' : 'text-neutral-900'}`}>
-                              {toolPageText.soundSourceBass?.replace(' Only', '') || 'Bass'}
-                            </p>
-                          </button>
+                          {showAdvanced && (
+                            <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200 animate-fadeIn">
+                              <h4 className="text-sm font-semibold text-neutral-700 mb-3">
+                                {toolPageText.advancedLabel || 'Manual Stem Selection'}
+                              </h4>
+                              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                                {/* All Stems */}
+                                <button
+                                  onClick={() => {
+                                    setSoundSource('all');
+                                    setActivePreset(null);
+                                  }}
+                                  className={`p-3 rounded-lg border-2 transition-all text-center ${
+                                    soundSource === 'all'
+                                      ? 'border-brand-500 bg-brand-500 text-white shadow-md'
+                                      : 'border-neutral-200 hover:border-brand-300 bg-white'
+                                  }`}
+                                >
+                                  <p className={`text-sm font-semibold ${soundSource === 'all' ? 'text-white' : 'text-neutral-900'}`}>
+                                    {toolPageText.soundSourceAll?.replace(' (4 tracks)', '') || 'All Stems'}
+                                  </p>
+                                </button>
 
-                          {/* Drums Only */}
-                          <button
-                            onClick={() => setSoundSource('drums')}
-                            className={`p-3 rounded-lg border-2 transition-all text-center ${
-                              soundSource === 'drums'
-                                ? 'border-brand-500 bg-brand-500 text-white shadow-md'
-                                : 'border-neutral-200 hover:border-brand-300 bg-white'
-                            }`}
-                          >
-                            <p className={`text-sm font-semibold ${soundSource === 'drums' ? 'text-white' : 'text-neutral-900'}`}>
-                              {toolPageText.soundSourceDrums?.replace(' Only', '') || 'Drums'}
-                            </p>
-                          </button>
+                                {/* Bass Only */}
+                                <button
+                                  onClick={() => {
+                                    setSoundSource('bass');
+                                    setActivePreset(null);
+                                  }}
+                                  className={`p-3 rounded-lg border-2 transition-all text-center ${
+                                    soundSource === 'bass'
+                                      ? 'border-brand-500 bg-brand-500 text-white shadow-md'
+                                      : 'border-neutral-200 hover:border-brand-300 bg-white'
+                                  }`}
+                                >
+                                  <p className={`text-sm font-semibold ${soundSource === 'bass' ? 'text-white' : 'text-neutral-900'}`}>
+                                    {toolPageText.soundSourceBass?.replace(' Only', '') || 'Bass'}
+                                  </p>
+                                </button>
 
-                          {/* Piano Only */}
-                          <button
-                            onClick={() => setSoundSource('piano')}
-                            className={`p-3 rounded-lg border-2 transition-all text-center ${
-                              soundSource === 'piano'
-                                ? 'border-brand-500 bg-brand-500 text-white shadow-md'
-                                : 'border-neutral-200 hover:border-brand-300 bg-white'
-                            }`}
-                          >
-                            <p className={`text-sm font-semibold ${soundSource === 'piano' ? 'text-white' : 'text-neutral-900'}`}>
-                              {toolPageText.soundSourcePiano?.replace(' Only', '') || 'Piano'}
-                            </p>
-                          </button>
+                                {/* Drums Only */}
+                                <button
+                                  onClick={() => {
+                                    setSoundSource('drums');
+                                    setActivePreset(null);
+                                  }}
+                                  className={`p-3 rounded-lg border-2 transition-all text-center ${
+                                    soundSource === 'drums'
+                                      ? 'border-brand-500 bg-brand-500 text-white shadow-md'
+                                      : 'border-neutral-200 hover:border-brand-300 bg-white'
+                                  }`}
+                                >
+                                  <p className={`text-sm font-semibold ${soundSource === 'drums' ? 'text-white' : 'text-neutral-900'}`}>
+                                    {toolPageText.soundSourceDrums?.replace(' Only', '') || 'Drums'}
+                                  </p>
+                                </button>
 
-                          {/* Guitar Only */}
-                          <button
-                            onClick={() => setSoundSource('guitar')}
-                            className={`p-3 rounded-lg border-2 transition-all text-center ${
-                              soundSource === 'guitar'
-                                ? 'border-brand-500 bg-brand-500 text-white shadow-md'
-                                : 'border-neutral-200 hover:border-brand-300 bg-white'
-                            }`}
-                          >
-                            <p className={`text-sm font-semibold ${soundSource === 'guitar' ? 'text-white' : 'text-neutral-900'}`}>
-                              {toolPageText.soundSourceGuitar?.replace(' Only', '') || 'Guitar'}
-                            </p>
-                          </button>
+                                {/* Piano Only */}
+                                <button
+                                  onClick={() => {
+                                    setSoundSource('piano');
+                                    setActivePreset(null);
+                                  }}
+                                  className={`p-3 rounded-lg border-2 transition-all text-center ${
+                                    soundSource === 'piano'
+                                      ? 'border-brand-500 bg-brand-500 text-white shadow-md'
+                                      : 'border-neutral-200 hover:border-brand-300 bg-white'
+                                  }`}
+                                >
+                                  <p className={`text-sm font-semibold ${soundSource === 'piano' ? 'text-white' : 'text-neutral-900'}`}>
+                                    {toolPageText.soundSourcePiano?.replace(' Only', '') || 'Piano'}
+                                  </p>
+                                </button>
+
+                                {/* Guitar Only */}
+                                <button
+                                  onClick={() => {
+                                    setSoundSource('guitar');
+                                    setActivePreset(null);
+                                  }}
+                                  className={`p-3 rounded-lg border-2 transition-all text-center ${
+                                    soundSource === 'guitar'
+                                      ? 'border-brand-500 bg-brand-500 text-white shadow-md'
+                                      : 'border-neutral-200 hover:border-brand-300 bg-white'
+                                  }`}
+                                >
+                                  <p className={`text-sm font-semibold ${soundSource === 'guitar' ? 'text-white' : 'text-neutral-900'}`}>
+                                    {toolPageText.soundSourceGuitar?.replace(' Only', '') || 'Guitar'}
+                                  </p>
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

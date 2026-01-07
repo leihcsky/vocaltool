@@ -6,7 +6,8 @@ import {
   getQuestionText,
   getFeaturesText,
   getToolsListText,
-  getPricingText
+  getPricingText,
+  getTargetAudienceText
 } from "~/i18n/languageText";
 
 export const revalidate = 120;
@@ -19,6 +20,7 @@ export default async function IndexPage({ params: { locale = '' }, searchParams:
   const featuresText = await getFeaturesText();
   const toolsListText = await getToolsListText();
   const pricingText = await getPricingText();
+  const targetAudienceText = await getTargetAudienceText();
 
   return (
     <PageComponent
@@ -28,6 +30,7 @@ export default async function IndexPage({ params: { locale = '' }, searchParams:
       featuresText={featuresText}
       toolsListText={toolsListText}
       pricingText={pricingText}
+      targetAudienceText={targetAudienceText}
       searchParams={searchParams}
     />
   )
